@@ -402,6 +402,52 @@
         .validate-btn:disabled:hover {
             transform: none;
         }
+        
+        /* Botón de regenerar */
+        .regenerate-btn {
+            background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+            color: white;
+            border: 2px solid #ffd700;
+            border-radius: 8px;
+            padding: 1rem 2rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3);
+            margin: 2rem auto;
+            display: inline-block;
+        }
+        
+        .regenerate-btn:hover {
+            background: linear-gradient(135deg, #0056b3 0%, #007bff 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 123, 255, 0.4);
+        }
+        
+        .regenerate-btn:active {
+            transform: translateY(0);
+        }
+        
+        .regenerate-btn:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+        
+        .regenerate-btn:disabled:hover {
+            transform: none;
+        }
+        
+        /* Contenedor de botones */
+        .buttons-container {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+            margin: 2rem 0;
+        }
     </style>
 </head>
 <body>
@@ -516,15 +562,25 @@
                     </div>
                 </div>
                 
-                <!-- Botón de validación -->
+                <!-- Botones de validación y regenerar -->
                 <div class="text-center mt-6">
-                    <button 
-                        id="validateBtn" 
-                        class="validate-btn"
-                        onclick="validateAssignments()"
-                    >
-                        ✅ Validar Asignaciones
-                    </button>
+                    <div class="buttons-container">
+                        <button 
+                            id="validateBtn" 
+                            class="validate-btn"
+                            onclick="validateAssignments()"
+                        >
+                            ✅ Validar Asignaciones
+                        </button>
+                        <button 
+                            id="regenerateBtn" 
+                            class="regenerate-btn"
+                            onclick="regenerateUrls()"
+                            style="display: none;"
+                        >
+                            🔄 Regenerar URL
+                        </button>
+                    </div>
                     <div id="validationMessage" class="mt-4 text-center" style="display: none;"></div>
                 </div>
             @endif
@@ -646,6 +702,12 @@
             validateBtn.textContent = '⏳ Validando...';
             validationMessage.style.display = 'none';
             
+            // Ocultar botón de regenerar mientras se valida
+            const regenerateBtn = document.getElementById('regenerateBtn');
+            if (regenerateBtn) {
+                regenerateBtn.style.display = 'none';
+            }
+            
             // Remover todas las marcas de invalidación previas
             document.querySelectorAll('.christmas-card').forEach(card => {
                 card.classList.remove('invalid');
@@ -677,6 +739,8 @@
                             </div>
                         `;
                         validationMessage.style.display = 'block';
+                        // Ocultar botón de regenerar
+                        document.getElementById('regenerateBtn').style.display = 'none';
                     } else {
                         // Hay asignaciones inválidas
                         const invalidCount = data.data.invalid_count;
@@ -692,6 +756,9 @@
                             </div>
                         `;
                         validationMessage.style.display = 'block';
+                        
+                        // Mostrar botón de regenerar
+                        document.getElementById('regenerateBtn').style.display = 'inline-block';
                         
                         // Marcar las tarjetas inválidas en rojo
                         data.data.invalid_urls.forEach(invalidUrl => {
@@ -736,8 +803,125 @@
             }
         }
         
+        // Función para regenerar URLs (misma lógica que en configuración)
+        async function regenerateUrls() {
+            if (!confirm('⚠️ ¿Estás seguro de que deseas regenerar las URLs?\n\nEsto:\n- Eliminará todas las URLs existentes\n- Generará nuevas URLs para todos los jugadores\n- Los IDs serán procesados en orden aleatorio\n- El estado del juego se pondrá en 0\n\n¿Deseas continuar?')) {
+                return;
+            }
+            
+            const regenerateBtn = document.getElementById('regenerateBtn');
+            const validationMessage = document.getElementById('validationMessage');
+            
+            regenerateBtn.disabled = true;
+            regenerateBtn.textContent = '⏳ Regenerando URLs...';
+            validationMessage.style.display = 'none';
+            
+            try {
+                const response = await fetch('/api/players/sync-urls-and-assign-names', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Cambiar el estado del juego a 0
+                    try {
+                        const gameResponse = await fetch('/api/game-config/', {
+                            method: 'PUT',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json',
+                                'X-CSRF-TOKEN': csrfToken
+                            },
+                            body: JSON.stringify({
+                                startgame: 0
+                            })
+                        });
+                        
+                        const gameData = await gameResponse.json();
+                        if (gameData.success) {
+                            console.log('Estado del juego actualizado a 0');
+                        }
+                    } catch (gameError) {
+                        console.error('Error al actualizar estado del juego:', gameError);
+                    }
+                    
+                    validationMessage.innerHTML = `
+                        <div style="background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%); 
+                                    border: 2px solid #28a745; 
+                                    border-radius: 8px; 
+                                    padding: 1rem; 
+                                    color: #155724; 
+                                    font-weight: 500;">
+                            ✅ <strong>URLs regeneradas exitosamente</strong><br>
+                            <small>Se generaron ${data.data.total_urls} URL(s) para ${data.data.total_players} jugador(es). Los IDs fueron procesados en orden aleatorio. El estado del juego se ha puesto en 0.</small>
+                        </div>
+                    `;
+                    validationMessage.style.display = 'block';
+                    
+                    // Ocultar botón de regenerar
+                    regenerateBtn.style.display = 'none';
+                    
+                    // Recargar la página para actualizar las URLs
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 2000);
+                } else {
+                    validationMessage.innerHTML = `
+                        <div style="background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%); 
+                                    border: 2px solid #dc3545; 
+                                    border-radius: 8px; 
+                                    padding: 1rem; 
+                                    color: #721c24; 
+                                    font-weight: 500;">
+                            ❌ <strong>Error</strong><br>
+                            <small>${data.message || 'No se pudieron regenerar las URLs.'}</small>
+                        </div>
+                    `;
+                    validationMessage.style.display = 'block';
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                validationMessage.innerHTML = `
+                    <div style="background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%); 
+                                border: 2px solid #dc3545; 
+                                border-radius: 8px; 
+                                padding: 1rem; 
+                                color: #721c24; 
+                                font-weight: 500;">
+                        ❌ <strong>Error de conexión</strong><br>
+                        <small>No se pudo conectar con el servidor.</small>
+                    </div>
+                `;
+                validationMessage.style.display = 'block';
+            } finally {
+                regenerateBtn.disabled = false;
+                regenerateBtn.textContent = '🔄 Regenerar URL';
+            }
+        }
+        
+        // Verificar estado de bloqueo de inputs desde localStorage
+        function checkInputsLockStatus() {
+            const inputsLocked = localStorage.getItem('inputsLocked');
+            if (inputsLocked === 'true') {
+                // Deshabilitar todos los selects
+                document.querySelectorAll('.christmas-select').forEach(select => {
+                    select.disabled = true;
+                    select.title = 'Los inputs están bloqueados desde la página de configuración';
+                });
+            }
+        }
+        
         // Inicializar nieve al cargar
         createSnowflakes();
+        
+        // Verificar estado de bloqueo al cargar
+        checkInputsLockStatus();
     </script>
 </body>
 </html>

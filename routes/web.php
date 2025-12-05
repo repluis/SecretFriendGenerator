@@ -6,6 +6,7 @@ use App\Http\Controllers\SecretFriendViewController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
+Route::get('/configuracion', [HomeController::class, 'configuracion'])->name('configuracion');
 
 // Ruta para ver el amigo secreto usando la URL única del jugador
 Route::get('/secret-friend/{url}', [SecretFriendViewController::class, 'show'])->name('secret-friend.show');

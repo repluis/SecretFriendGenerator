@@ -10,6 +10,12 @@ Route::prefix('players')->group(function () {
     Route::get('/with-friends', [PlayerController::class, 'indexWithFriends']);
     Route::get('/urls', [PlayerController::class, 'getAllUrls']);
     Route::get('/validate-assignments', [PlayerController::class, 'validateAssignments']);
+    
+    // Habilitar vista
+    Route::post('/enable-view', [PlayerController::class, 'enableViewForPlayer']);
+    Route::post('/enable-view-all', [PlayerController::class, 'enableViewForAll']);
+    Route::post('/urls/{urlId}/reset-view', [PlayerController::class, 'resetUrlView']);
+    
     Route::get('/{id}', [PlayerController::class, 'show']);
     
     // Crear jugadores
@@ -39,5 +45,6 @@ Route::prefix('players')->group(function () {
 Route::prefix('game-config')->group(function () {
     Route::get('/', [GameConfigurationController::class, 'show']);
     Route::put('/', [GameConfigurationController::class, 'update']);
+    Route::post('/reset', [GameConfigurationController::class, 'resetGame']);
 });
 

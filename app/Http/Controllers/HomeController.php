@@ -31,4 +31,22 @@ class HomeController extends Controller
 
         return view('home', compact('urls', 'allPlayers', 'gameStarted'));
     }
+
+    /**
+     * Display the configuration page for adding players.
+     *
+     * @return View
+     */
+    public function configuracion(): View
+    {
+        $players = Player::where('estado', true)
+            ->orderBy('nombre')
+            ->get();
+        
+        $urls = Url::with(['friendPlayer'])
+            ->orderBy('created_at', 'desc')
+            ->get();
+        
+        return view('configuracion', compact('players', 'urls'));
+    }
 }

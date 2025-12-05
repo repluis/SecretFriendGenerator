@@ -290,8 +290,12 @@ class PlayerController extends Controller
             ], 422);
         }
 
+        // Mezclar aleatoriamente la lista de nombres antes de guardar
+        $nombres = $request->nombres;
+        shuffle($nombres);
+
         $players = [];
-        foreach ($request->nombres as $nombre) {
+        foreach ($nombres as $nombre) {
             $players[] = Player::create([
                 'nombre' => $nombre,
                 'estado' => true,
@@ -634,9 +638,16 @@ class PlayerController extends Controller
      */
     public function syncUrlsAndAssignNames(): JsonResponse
     {
-        // Obtener todos los nombres de jugadores activos
+        // Eliminar todos los registros de la tabla urls
+        Url::truncate();
+        
+        // Obtener todos los jugadores activos y mezclarlos aleatoriamente
         $players = Player::where('estado', true)->get();
-        $playerNames = $players->pluck('nombre')->toArray();
+        
+        // Mezclar la colección aleatoriamente
+        $shuffledPlayers = $players->shuffle();
+        
+        $playerNames = $shuffledPlayers->pluck('nombre')->toArray();
 
         if (count($playerNames) < 2) {
             return response()->json([
@@ -658,9 +669,10 @@ class PlayerController extends Controller
             // Obtener IDs de jugadores que ya tienen URL
             $playersWithUrl = Url::whereNotNull('player_id')->pluck('player_id')->toArray();
             
-            // Obtener jugadores que no tienen URL usando Query Builder
+            // Obtener jugadores que no tienen URL usando Query Builder y mezclarlos aleatoriamente
             $playersWithoutUrl = Player::where('estado', true)
                 ->whereNotIn('id', $playersWithUrl)
+                ->inRandomOrder()
                 ->take($urlsToCreate)
                 ->get();
             
@@ -900,6 +912,109 @@ class PlayerController extends Controller
                 'valid_count' => count($validUrls),
                 'invalid_urls' => $invalidUrls,
                 'valid_urls' => $validUrls,
+            ],
+        ], 200);
+    }
+
+    /**
+     * Habilitar la vista a un jugador específico por nombre (poner viewed = false).
+     *
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function enableViewForPlayer(Request $request): JsonResponse
+    {
+        $validator = Validator::make($request->all(), [
+            'nombre' => 'required|string|max:255',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation error',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $player = Player::where('nombre', $request->nombre)
+            ->where('estado', true)
+            ->first();
+
+        if (!$player) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No se encontró un jugador activo con ese nombre',
+            ], 404);
+        }
+
+        $url = Url::where('player_id', $player->id)->first();
+
+        if (!$url) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No se encontró URL para este jugador',
+            ], 404);
+        }
+
+        $url->update(['viewed' => false]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Vista habilitada para el jugador',
+            'data' => [
+                'player_id' => $player->id,
+                'player_name' => $player->nombre,
+                'url_id' => $url->id,
+                'viewed' => false,
+            ],
+        ], 200);
+    }
+
+    /**
+     * Habilitar la vista a todos los jugadores (poner viewed = false para todos).
+     *
+     * @return JsonResponse
+     */
+    public function enableViewForAll(): JsonResponse
+    {
+        $updated = Url::where('viewed', true)->update(['viewed' => false]);
+        $total = Url::count();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Vista habilitada para todos los jugadores',
+            'data' => [
+                'updated' => $updated,
+                'total_urls' => $total,
+            ],
+        ], 200);
+    }
+
+    /**
+     * Restablecer la vista de una URL específica (poner viewed = false).
+     *
+     * @param string|int $urlId
+     * @return JsonResponse
+     */
+    public function resetUrlView(string|int $urlId): JsonResponse
+    {
+        $url = Url::find((int) $urlId);
+
+        if (!$url) {
+            return response()->json([
+                'success' => false,
+                'message' => 'URL no encontrada',
+            ], 404);
+        }
+
+        $url->update(['viewed' => false]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Vista restablecida para la URL',
+            'data' => [
+                'url_id' => $url->id,
+                'viewed' => false,
             ],
         ], 200);
     }
