@@ -1,0 +1,188 @@
+### Secret Friend Generator API
+### Base URL - Ajusta según tu entorno
+@baseUrl = http://localhost:8000
+@apiUrl = {{baseUrl}}/api
+
+### Variables
+@playerId = 1
+@playerName = Juan
+
+###############################################
+### VER JUGADORES
+###############################################
+
+### Ver todos los jugadores
+GET {{apiUrl}}/players
+Content-Type: application/json
+Accept: application/json
+
+###
+
+### Ver todos los jugadores con sus amigos
+GET {{apiUrl}}/players/with-friends
+Content-Type: application/json
+Accept: application/json
+
+###
+
+### Ver un jugador por ID
+GET {{apiUrl}}/players/{{playerId}}
+Content-Type: application/json
+Accept: application/json
+
+###
+
+###############################################
+### CREAR JUGADORES
+###############################################
+
+### Crear un jugador
+POST {{apiUrl}}/players
+Content-Type: application/json
+Accept: application/json
+
+{
+  "nombre": "Juan Pérez"
+}
+
+###
+
+### Crear varios jugadores
+POST {{apiUrl}}/players/many
+Content-Type: application/json
+Accept: application/json
+
+{
+  "nombres": [
+    "Luis Cedeño Posligua",
+    "Shirley Cedeño",
+    "Katherine Gabriela",
+    "Dolores Vera",
+    "Luis Cedeño Lino",
+    "Jose Palma",
+    "Pedro Gerrero",
+    "Ahilny Palma",
+    "Samara Gerrero",
+    "Jeremy Alava",
+    "Dereck Cedeño",
+    "Jean Molina"
+  ]
+}
+
+###
+
+###############################################
+### ACTUALIZAR JUGADORES
+###############################################
+
+### Agregar URL a un jugador
+PUT {{apiUrl}}/players/{{playerId}}/url
+Content-Type: application/json
+Accept: application/json
+
+{
+  "url": "https://ejemplo.com/perfil/juan"
+}
+
+###
+
+### Agregar amigo a un jugador
+PUT {{apiUrl}}/players/{{playerId}}/friend
+Content-Type: application/json
+Accept: application/json
+
+{
+  "friend": "María García"
+}
+
+###
+
+### Asignar amigos aleatorios a todos los jugadores
+POST {{apiUrl}}/players/assign-friends
+Content-Type: application/json
+Accept: application/json
+
+###
+
+###############################################
+### GESTIÓN DE URLs (Tabla urls)
+###############################################
+
+### Generar URLs aleatorias para todos los jugadores (una por cada jugador)
+### Crea registros en la tabla urls. Si un jugador ya tiene URL, la mantiene.
+POST {{apiUrl}}/players/generate-urls
+Content-Type: application/json
+Accept: application/json
+
+###
+
+### Asignar URLs aleatorias a TODOS los jugadores (regenera si ya tienen)
+### Elimina URLs existentes y crea nuevas en la tabla urls
+POST {{apiUrl}}/players/assign-urls-to-all
+Content-Type: application/json
+Accept: application/json
+
+###
+
+### Obtener todas las URLs de la tabla urls con información del jugador
+GET {{apiUrl}}/players/urls
+Content-Type: application/json
+Accept: application/json
+
+###
+
+### Sincronizar URLs con jugadores y asignar nombres aleatorios
+### Asegura que haya el mismo número de URLs que jugadores activos.
+### Si hay más jugadores que URLs, crea las URLs faltantes.
+### Si hay más URLs que jugadores, elimina las URLs sobrantes.
+### Asigna un nombre aleatorio a cada URL sin repeticiones.
+POST {{apiUrl}}/players/sync-urls-and-assign-names
+Content-Type: application/json
+Accept: application/json
+
+###
+
+###############################################
+### ELIMINAR JUGADORES
+###############################################
+
+### Eliminar un jugador por nombre
+DELETE {{apiUrl}}/players/by-name
+Content-Type: application/json
+Accept: application/json
+
+{
+  "nombre": "{{playerName}}"
+}
+
+###
+
+### Eliminar todos los jugadores
+DELETE {{apiUrl}}/players/all
+Content-Type: application/json
+Accept: application/json
+
+###
+
+###############################################
+### CONFIGURACIÓN DEL JUEGO
+###############################################
+
+### Obtener estado actual del juego
+GET {{apiUrl}}/game-config
+Content-Type: application/json
+Accept: application/json
+
+###
+
+### Cambiar estado del juego (0 = no iniciado, 1 = iniciado)
+PUT {{apiUrl}}/game-config
+Content-Type: application/json
+Accept: application/json
+
+{
+  "startgame": 1
+}
+
+###
+

@@ -1,0 +1,69 @@
+### Secret Friend Generator - Configuración del Juego
+### Base URL - Ajusta según tu entorno
+@baseUrl = http://localhost:8000
+@apiUrl = {{baseUrl}}/api
+
+###############################################
+### CONFIGURACIÓN DEL JUEGO - RUTAS PRINCIPALES
+###############################################
+
+### 1. Agregar varios jugadores
+POST {{apiUrl}}/players/many
+Content-Type: application/json
+Accept: application/json
+
+{
+  "nombres": [
+    "Luis Cedeño Posligua",
+    "Shirley Cedeño",
+    "Katherine Gabriela",
+    "Dolores Vera",
+    "Luis Cedeño Lino",
+    "Jose Palma",
+    "Pedro Gerrero",
+    "Ahilny Palma",
+    "Samara Gerrero",
+    "Jeremy Alava",
+    "Dereck Cedeño",
+    "Jean Molina"
+  ]
+}
+
+###
+
+### 2. Eliminar todos los jugadores
+DELETE {{apiUrl}}/players/all
+Content-Type: application/json
+Accept: application/json
+
+###
+
+### 3. Crear URLs en la tabla url y asignar amigos aleatorios
+### Sincroniza URLs con jugadores y asigna nombres aleatorios.
+### Asegura que haya el mismo número de URLs que jugadores activos.
+POST {{apiUrl}}/players/sync-urls-and-assign-names
+Content-Type: application/json
+Accept: application/json
+
+###
+
+### 4. Mostrar todas las URLs con información de jugadores y amigos
+GET {{apiUrl}}/players/urls
+Content-Type: application/json
+Accept: application/json
+
+###
+
+### 5. Mostrar jugadores con sus amigos asignados
+GET {{apiUrl}}/players/with-friends
+Content-Type: application/json
+Accept: application/json
+
+###
+
+### 6. Eliminar todos los registros de la tabla url
+DELETE {{apiUrl}}/players/urls/all
+Content-Type: application/json
+Accept: application/json
+
+###
