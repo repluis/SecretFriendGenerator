@@ -343,6 +343,65 @@
         .decoration-2 { top: 20%; right: 5%; animation-delay: 1s; }
         .decoration-3 { bottom: 10%; left: 10%; animation-delay: 2s; }
         .decoration-4 { bottom: 20%; right: 10%; animation-delay: 1.5s; }
+        
+        /* Tarjeta inválida (roja) */
+        .christmas-card.invalid {
+            background: linear-gradient(135deg, #ffe6e6 0%, #ffcccc 100%);
+            border: 3px solid #dc3545;
+            box-shadow: 
+                0 10px 30px rgba(220, 53, 69, 0.3),
+                inset 0 0 50px rgba(220, 53, 69, 0.1);
+        }
+        
+        .christmas-card.invalid:hover {
+            box-shadow: 
+                0 15px 40px rgba(220, 53, 69, 0.4),
+                inset 0 0 60px rgba(220, 53, 69, 0.15);
+        }
+        
+        .christmas-card.invalid::before {
+            content: '⚠️';
+        }
+        
+        .christmas-card.invalid::after {
+            content: '❌';
+        }
+        
+        /* Botón de validar */
+        .validate-btn {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            border: 2px solid #ffd700;
+            border-radius: 8px;
+            padding: 1rem 2rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+            margin: 2rem auto;
+            display: block;
+        }
+        
+        .validate-btn:hover {
+            background: linear-gradient(135deg, #20c997 0%, #28a745 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
+        }
+        
+        .validate-btn:active {
+            transform: translateY(0);
+        }
+        
+        .validate-btn:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+        
+        .validate-btn:disabled:hover {
+            transform: none;
+        }
     </style>
 </head>
 <body>
@@ -371,7 +430,7 @@
                 <div class="table-container">
                     <div class="space-y-4">
                         @foreach($urls as $index => $url)
-                            <div class="christmas-card">
+                            <div class="christmas-card" id="card-{{ $url->id }}" data-url-id="{{ $url->id }}">
                                 <!-- Número navideño grande -->
                                 <div class="card-number">{{ $loop->iteration }}</div>
                                 
@@ -455,6 +514,18 @@
                             </div>
                         @endforeach
                     </div>
+                </div>
+                
+                <!-- Botón de validación -->
+                <div class="text-center mt-6">
+                    <button 
+                        id="validateBtn" 
+                        class="validate-btn"
+                        onclick="validateAssignments()"
+                    >
+                        ✅ Validar Asignaciones
+                    </button>
+                    <div id="validationMessage" class="mt-4 text-center" style="display: none;"></div>
                 </div>
             @endif
         </div>
@@ -563,6 +634,106 @@
                 console.error('Error al copiar:', err);
                 alert('Error al copiar la URL');
             });
+        }
+        
+        // Función para validar asignaciones
+        async function validateAssignments() {
+            const validateBtn = document.getElementById('validateBtn');
+            const validationMessage = document.getElementById('validationMessage');
+            
+            // Deshabilitar botón mientras se valida
+            validateBtn.disabled = true;
+            validateBtn.textContent = '⏳ Validando...';
+            validationMessage.style.display = 'none';
+            
+            // Remover todas las marcas de invalidación previas
+            document.querySelectorAll('.christmas-card').forEach(card => {
+                card.classList.remove('invalid');
+            });
+            
+            try {
+                const response = await fetch('/api/players/validate-assignments', {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    if (data.data.is_valid) {
+                        // Todas las asignaciones son válidas
+                        validationMessage.innerHTML = `
+                            <div style="background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%); 
+                                        border: 2px solid #28a745; 
+                                        border-radius: 8px; 
+                                        padding: 1rem; 
+                                        color: #155724; 
+                                        font-weight: 500;">
+                                ✅ <strong>Todas las asignaciones son válidas</strong><br>
+                                <small>Ningún jugador tiene a sí mismo como amigo secreto.</small>
+                            </div>
+                        `;
+                        validationMessage.style.display = 'block';
+                    } else {
+                        // Hay asignaciones inválidas
+                        const invalidCount = data.data.invalid_count;
+                        validationMessage.innerHTML = `
+                            <div style="background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%); 
+                                        border: 2px solid #dc3545; 
+                                        border-radius: 8px; 
+                                        padding: 1rem; 
+                                        color: #721c24; 
+                                        font-weight: 500;">
+                                ❌ <strong>Se encontraron ${invalidCount} asignación(es) inválida(s)</strong><br>
+                                <small>Las tarjetas marcadas en rojo tienen jugadores que se asignaron a sí mismos.</small>
+                            </div>
+                        `;
+                        validationMessage.style.display = 'block';
+                        
+                        // Marcar las tarjetas inválidas en rojo
+                        data.data.invalid_urls.forEach(invalidUrl => {
+                            const card = document.getElementById(`card-${invalidUrl.id}`);
+                            if (card) {
+                                card.classList.add('invalid');
+                                // Scroll suave a la primera tarjeta inválida
+                                if (invalidUrl.id === data.data.invalid_urls[0].id) {
+                                    card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                }
+                            }
+                        });
+                    }
+                } else {
+                    validationMessage.innerHTML = `
+                        <div style="background: #f8d7da; 
+                                    border: 2px solid #dc3545; 
+                                    border-radius: 8px; 
+                                    padding: 1rem; 
+                                    color: #721c24;">
+                            ❌ Error: ${data.message || 'No se pudo validar las asignaciones'}
+                        </div>
+                    `;
+                    validationMessage.style.display = 'block';
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                validationMessage.innerHTML = `
+                    <div style="background: #f8d7da; 
+                                border: 2px solid #dc3545; 
+                                border-radius: 8px; 
+                                padding: 1rem; 
+                                color: #721c24;">
+                        ❌ Error al validar las asignaciones. Por favor, intenta de nuevo.
+                    </div>
+                `;
+                validationMessage.style.display = 'block';
+            } finally {
+                // Restaurar botón
+                validateBtn.disabled = false;
+                validateBtn.textContent = '✅ Validar Asignaciones';
+            }
         }
         
         // Inicializar nieve al cargar

@@ -1,6 +1,7 @@
 ### Secret Friend Generator - Configuración del Juego
 ### Base URL - Ajusta según tu entorno
 @baseUrl = http://localhost:8000
+##@baseUrl = http://itsluisforyour.alwaysdata.net
 @apiUrl = {{baseUrl}}/api
 
 ###############################################

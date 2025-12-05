@@ -9,6 +9,7 @@ Route::prefix('players')->group(function () {
     Route::get('/', [PlayerController::class, 'index']);
     Route::get('/with-friends', [PlayerController::class, 'indexWithFriends']);
     Route::get('/urls', [PlayerController::class, 'getAllUrls']);
+    Route::get('/validate-assignments', [PlayerController::class, 'validateAssignments']);
     Route::get('/{id}', [PlayerController::class, 'show']);
     
     // Crear jugadores

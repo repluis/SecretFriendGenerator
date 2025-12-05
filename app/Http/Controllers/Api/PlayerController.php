@@ -848,4 +848,59 @@ class PlayerController extends Controller
             ],
         ], 200);
     }
+
+    /**
+     * Validar que ningún jugador tenga a sí mismo como amigo secreto.
+     * Verifica que player_id != friends en la tabla urls.
+     *
+     * @return JsonResponse
+     */
+    public function validateAssignments(): JsonResponse
+    {
+        // Obtener todas las URLs con sus relaciones
+        $urls = Url::with(['player', 'friendPlayer'])->get();
+        
+        $invalidUrls = [];
+        $validUrls = [];
+        
+        foreach ($urls as $url) {
+            // Validar que player_id sea diferente de friends
+            // Si ambos están definidos y son iguales, es inválido
+            if ($url->player_id !== null && $url->friends !== null && $url->player_id == $url->friends) {
+                $invalidUrls[] = [
+                    'id' => $url->id,
+                    'url' => $url->url,
+                    'player_id' => $url->player_id,
+                    'player_name' => $url->player ? $url->player->nombre : 'N/A',
+                    'friends' => $url->friends,
+                    'friends_name' => $url->friendPlayer ? $url->friendPlayer->nombre : 'N/A',
+                ];
+            } else {
+                $validUrls[] = [
+                    'id' => $url->id,
+                    'url' => $url->url,
+                    'player_id' => $url->player_id,
+                    'player_name' => $url->player ? $url->player->nombre : 'N/A',
+                    'friends' => $url->friends,
+                    'friends_name' => $url->friendPlayer ? $url->friendPlayer->nombre : 'N/A',
+                ];
+            }
+        }
+        
+        $isValid = count($invalidUrls) === 0;
+        
+        return response()->json([
+            'success' => true,
+            'message' => $isValid 
+                ? 'Todas las asignaciones son válidas' 
+                : 'Se encontraron asignaciones inválidas',
+            'data' => [
+                'is_valid' => $isValid,
+                'invalid_count' => count($invalidUrls),
+                'valid_count' => count($validUrls),
+                'invalid_urls' => $invalidUrls,
+                'valid_urls' => $validUrls,
+            ],
+        ], 200);
+    }
 }
