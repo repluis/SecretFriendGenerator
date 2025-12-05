@@ -67,3 +67,14 @@ Content-Type: application/json
 Accept: application/json
 
 ###
+
+### Cambiar estado del juego (0 = no iniciado, 1 = iniciado)
+PUT {{apiUrl}}/game-config
+Content-Type: application/json
+Accept: application/json
+
+{
+  "startgame": 0
+}
+
+###

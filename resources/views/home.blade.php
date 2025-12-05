@@ -237,6 +237,18 @@
             border-color: #ffd700;
         }
         
+        .christmas-select:disabled {
+            background: #f5f5f5;
+            border-color: #999;
+            color: #999;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+        
+        .christmas-select:disabled:hover {
+            border-color: #999;
+        }
+        
         /* Botón navideño */
         .christmas-btn {
             background: linear-gradient(135deg, #c41e3a 0%, #8b1538 100%);
@@ -365,29 +377,38 @@
                                 
                                 <!-- URL oculta tipo papel -->
                                 @if($gameStarted)
-                                    <div class="url-paper" onclick="toggleUrl({{ $url->id }})">
-                                        <div class="url-toggle">
-                                            <span class="url-toggle-text">📄 Ver URL</span>
-                                            <span class="url-toggle-icon">▼</span>
-                                        </div>
-                                        <div class="url-hidden" id="url-{{ $url->id }}">
-                                            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mt-2">
-                                                <a 
-                                                    href="{{ url('/secret-friend/' . $url->url) }}" 
-                                                    target="_blank"
-                                                    class="text-blue-600 hover:underline text-sm font-mono break-all"
-                                                >
-                                                    {{ url('/secret-friend/' . $url->url) }}
-                                                </a>
-                                                <button 
-                                                    onclick="event.stopPropagation(); copyToClipboard('{{ url('/secret-friend/' . $url->url) }}')"
-                                                    class="christmas-btn"
-                                                >
-                                                    📋 Copiar
-                                                </button>
+                                    @if($url->viewed)
+                                        <div class="url-paper blocked">
+                                            <div class="url-toggle">
+                                                <span class="url-toggle-text">🔒 Esta URL ya fue vista</span>
+                                                <span class="url-toggle-icon">🔒</span>
                                             </div>
                                         </div>
-                                    </div>
+                                    @else
+                                        <div class="url-paper" onclick="toggleUrl({{ $url->id }})">
+                                            <div class="url-toggle">
+                                                <span class="url-toggle-text">📄 Ver URL</span>
+                                                <span class="url-toggle-icon">▼</span>
+                                            </div>
+                                            <div class="url-hidden" id="url-{{ $url->id }}">
+                                                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mt-2">
+                                                    <a 
+                                                        href="{{ url('/secret-friend/' . $url->url) }}" 
+                                                        target="_blank"
+                                                        class="text-blue-600 hover:underline text-sm font-mono break-all"
+                                                    >
+                                                        {{ url('/secret-friend/' . $url->url) }}
+                                                    </a>
+                                                    <button 
+                                                        onclick="event.stopPropagation(); copyToClipboard('{{ url('/secret-friend/' . $url->url) }}')"
+                                                        class="christmas-btn"
+                                                    >
+                                                        📋 Copiar
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @endif
                                 @else
                                     <div class="url-paper blocked">
                                         <div class="url-toggle">
@@ -414,6 +435,8 @@
                                         id="playerSelect_{{ $url->id }}" 
                                         class="christmas-select"
                                         onchange="updateUrlPlayer({{ $url->id }}, this.value)"
+                                        {{ $gameStarted ? 'disabled' : '' }}
+                                        title="{{ $gameStarted ? 'El juego ya ha iniciado, no se pueden modificar las asignaciones' : '' }}"
                                     >
                                         <option value="">-- Seleccionar Dueño de URL --</option>
                                         @foreach($availablePlayers as $player)
@@ -425,6 +448,9 @@
                                             </option>
                                         @endforeach
                                     </select>
+                                    @if($gameStarted)
+                                        <p class="text-xs text-gray-500 mt-1 italic">🔒 El juego ha iniciado, no se pueden modificar las asignaciones</p>
+                                    @endif
                                 </div>
                             </div>
                         @endforeach
