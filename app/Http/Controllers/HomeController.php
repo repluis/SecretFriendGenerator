@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\GameConfiguration;
 use App\Models\Player;
 use App\Models\Url;
 use Illuminate\View\View;
@@ -23,7 +24,11 @@ class HomeController extends Controller
         $allPlayers = Player::where('estado', true)
             ->orderBy('nombre')
             ->get();
+        
+        // Obtener el estado del juego
+        $gameConfig = GameConfiguration::getCurrent();
+        $gameStarted = $gameConfig->startgame == 1;
 
-        return view('home', compact('urls', 'allPlayers'));
+        return view('home', compact('urls', 'allPlayers', 'gameStarted'));
     }
 }

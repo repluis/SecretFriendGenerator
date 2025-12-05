@@ -69,6 +69,51 @@
             transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
         
+        /* Número navideño grande */
+        .card-number {
+            position: absolute;
+            top: -20px;
+            left: 20px;
+            font-family: 'Mountains of Christmas', cursive;
+            font-size: 4rem;
+            font-weight: 700;
+            color: #ffd700;
+            text-shadow: 
+                3px 3px 0px #c41e3a,
+                5px 5px 0px #c41e3a,
+                0 0 30px rgba(255, 215, 0, 0.8),
+                0 0 60px rgba(255, 215, 0, 0.4);
+            line-height: 1;
+            z-index: 10;
+            transform: rotate(-5deg);
+            animation: numberGlow 2s ease-in-out infinite alternate;
+        }
+        
+        @keyframes numberGlow {
+            0% {
+                text-shadow: 
+                    3px 3px 0px #c41e3a,
+                    5px 5px 0px #c41e3a,
+                    0 0 30px rgba(255, 215, 0, 0.8),
+                    0 0 60px rgba(255, 215, 0, 0.4);
+            }
+            100% {
+                text-shadow: 
+                    3px 3px 0px #c41e3a,
+                    5px 5px 0px #c41e3a,
+                    0 0 40px rgba(255, 215, 0, 1),
+                    0 0 80px rgba(255, 215, 0, 0.6);
+            }
+        }
+        
+        @media (max-width: 640px) {
+            .card-number {
+                font-size: 3rem;
+                top: -15px;
+                left: 15px;
+            }
+        }
+        
         .christmas-card:hover {
             transform: translateY(-5px);
             box-shadow: 
@@ -111,6 +156,26 @@
         .url-paper:hover {
             background: #fff9e6;
             border-color: #ffd700;
+        }
+        
+        .url-paper.blocked {
+            background: #f5f5f5;
+            border-color: #999;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+        
+        .url-paper.blocked:hover {
+            background: #f5f5f5;
+            border-color: #999;
+        }
+        
+        .url-paper.blocked .url-toggle-text {
+            color: #999;
+        }
+        
+        .url-paper.blocked .url-toggle-icon {
+            color: #999;
         }
         
         .url-paper .url-hidden {
@@ -293,32 +358,44 @@
             @else
                 <div class="table-container">
                     <div class="space-y-4">
-                        @foreach($urls as $url)
+                        @foreach($urls as $index => $url)
                             <div class="christmas-card">
+                                <!-- Número navideño grande -->
+                                <div class="card-number">{{ $loop->iteration }}</div>
+                                
                                 <!-- URL oculta tipo papel -->
-                                <div class="url-paper" onclick="toggleUrl({{ $url->id }})">
-                                    <div class="url-toggle">
-                                        <span class="url-toggle-text">📄 Ver URL</span>
-                                        <span class="url-toggle-icon">▼</span>
-                                    </div>
-                                    <div class="url-hidden" id="url-{{ $url->id }}">
-                                        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mt-2">
-                                            <a 
-                                                href="{{ url('/secret-friend/' . $url->url) }}" 
-                                                target="_blank"
-                                                class="text-blue-600 hover:underline text-sm font-mono break-all"
-                                            >
-                                                {{ url('/secret-friend/' . $url->url) }}
-                                            </a>
-                                            <button 
-                                                onclick="event.stopPropagation(); copyToClipboard('{{ url('/secret-friend/' . $url->url) }}')"
-                                                class="christmas-btn"
-                                            >
-                                                📋 Copiar
-                                            </button>
+                                @if($gameStarted)
+                                    <div class="url-paper" onclick="toggleUrl({{ $url->id }})">
+                                        <div class="url-toggle">
+                                            <span class="url-toggle-text">📄 Ver URL</span>
+                                            <span class="url-toggle-icon">▼</span>
+                                        </div>
+                                        <div class="url-hidden" id="url-{{ $url->id }}">
+                                            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mt-2">
+                                                <a 
+                                                    href="{{ url('/secret-friend/' . $url->url) }}" 
+                                                    target="_blank"
+                                                    class="text-blue-600 hover:underline text-sm font-mono break-all"
+                                                >
+                                                    {{ url('/secret-friend/' . $url->url) }}
+                                                </a>
+                                                <button 
+                                                    onclick="event.stopPropagation(); copyToClipboard('{{ url('/secret-friend/' . $url->url) }}')"
+                                                    class="christmas-btn"
+                                                >
+                                                    📋 Copiar
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
+                                @else
+                                    <div class="url-paper blocked">
+                                        <div class="url-toggle">
+                                            <span class="url-toggle-text">🔒 El juego no ha iniciado</span>
+                                            <span class="url-toggle-icon">🔒</span>
+                                        </div>
+                                    </div>
+                                @endif
                                 
                                 <!-- Select para asignar jugador -->
                                 <div>
@@ -378,6 +455,10 @@
         // Toggle para mostrar/ocultar URL
         function toggleUrl(urlId) {
             const urlPaper = event.currentTarget;
+            // Verificar si está bloqueado
+            if (urlPaper.classList.contains('blocked')) {
+                return;
+            }
             urlPaper.classList.toggle('expanded');
         }
         
