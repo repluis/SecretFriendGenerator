@@ -15,6 +15,15 @@
         font-weight: 600; cursor: pointer; white-space: nowrap; transition: background .15s;
     }
     .btn-reset-data:hover { background: #fca5a5; }
+    .btn-copy-resumen {
+        display: inline-flex; align-items: center; gap: 0.4rem;
+        background: #dcfce7; color: #166534; border: 1px solid #86efac;
+        padding: 0.45rem 1rem; border-radius: 0.5rem; font-size: 0.85rem;
+        font-weight: 600; cursor: pointer; white-space: nowrap; transition: background .15s;
+    }
+    .btn-copy-resumen:hover { background: #bbf7d0; }
+    .btn-copy-resumen.copied { background: #166534; color: #fff; border-color: #166534; }
+    .header-actions { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; }
     .modal-warning { color: #7f1d1d; font-size: 0.9rem; margin: 0.5rem 0 1.25rem; line-height: 1.5; }
     .modal-warning strong { display: block; font-size: 1rem; margin-bottom: 0.35rem; }
     .modal-actions { display: flex; gap: 0.75rem; justify-content: flex-end; }
@@ -28,9 +37,14 @@
                 <h1>Recaudaciones &mdash; {{ ucfirst($type) }}</h1>
                 <p>Control de cobros mensuales. Cada 15 se cobra $1.00, mora diaria de $0.05 por atraso.</p>
             </div>
-            <button class="btn-reset-data" onclick="openResetModal()">
-                &#9888; Eliminar todos los datos
-            </button>
+            <div class="header-actions">
+                <button class="btn-copy-resumen" id="btn-copy-resumen" onclick="copyResumen()">
+                    &#128203; Copiar resumen
+                </button>
+                <button class="btn-reset-data" onclick="openResetModal()">
+                    &#9888; Eliminar todos los datos
+                </button>
+            </div>
         </div>
     </div>
 
@@ -192,6 +206,82 @@
 
 @section('scripts')
 <script>
+    const resumenData = {
+        totalRecaudado: {{ $totalFromTransactions }},
+        totalPendiente: {{ $summary['total_pending'] }},
+        users: [
+            @foreach($users as $user)
+            @php
+                $txBal = $userTransactionBalances[$user['user_id']] ?? 0;
+                $saldoUser = $user['total_owed'] - $txBal;
+            @endphp
+            {
+                name: @json($user['user_name']),
+                pago: {{ $txBal }},
+                debe: {{ max(0, $saldoUser) }}
+            },
+            @endforeach
+        ]
+    };
+
+    function fmt(n) {
+        return '$' + parseFloat(n).toFixed(2);
+    }
+
+    function copyResumen() {
+        const morosos = resumenData.users
+            .filter(u => u.debe > 0)
+            .sort((a, b) => b.debe - a.debe);
+
+        const pagaron = resumenData.users
+            .filter(u => u.debe <= 0)
+            .sort((a, b) => a.name.localeCompare(b.name));
+
+        const today = new Date().toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
+        const sep = '━━━━━━━━━━━━━━━━━━━━';
+
+        let lines = [];
+        lines.push('📊 *Resumen de Recaudaciones*');
+        lines.push('_' + today + '_');
+        lines.push('');
+        lines.push('💰 *Total Recaudado:* ' + fmt(resumenData.totalRecaudado));
+        lines.push('⏳ *Pendiente:* ' + fmt(resumenData.totalPendiente));
+
+        if (morosos.length > 0) {
+            lines.push('');
+            lines.push(sep);
+            lines.push('🔴 *MOROSOS*');
+            lines.push(sep);
+            morosos.forEach(u => {
+                lines.push('• ' + u.name + ' → pagó ' + fmt(u.pago) + ' | debe ' + fmt(u.debe));
+            });
+        }
+
+        if (pagaron.length > 0) {
+            lines.push('');
+            lines.push(sep);
+            lines.push('✅ *YA PAGARON*');
+            lines.push(sep);
+            pagaron.forEach(u => {
+                lines.push('• ' + u.name + ' → pagó ' + fmt(u.pago) + ' ✔');
+            });
+        }
+
+        const text = lines.join('\n');
+
+        navigator.clipboard.writeText(text).then(() => {
+            const btn = document.getElementById('btn-copy-resumen');
+            btn.textContent = '✔ Copiado!';
+            btn.classList.add('copied');
+            setTimeout(() => {
+                btn.innerHTML = '&#128203; Copiar resumen';
+                btn.classList.remove('copied');
+            }, 2000);
+        }).catch(() => {
+            alert('No se pudo copiar al portapapeles. Intenta desde un navegador moderno.');
+        });
+    }
+
     function openResetModal() {
         document.getElementById('modal-reset-data').classList.add('open');
     }

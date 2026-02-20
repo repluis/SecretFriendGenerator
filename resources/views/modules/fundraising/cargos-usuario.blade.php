@@ -4,9 +4,24 @@
 
 @section('styles')
 <style>
-    .page-header { margin-bottom: 2.5rem; }
+    .page-header { margin-bottom: 2rem; }
     .page-header h1 { font-size: 2rem; font-weight: 700; margin-bottom: 0.25rem; }
     .page-header p { color: #64748b; }
+    .summary-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+    .summary-card {
+        background: #fff; border: 1px solid #e2e8f0; border-radius: 0.75rem;
+        padding: 1.25rem 1.5rem;
+    }
+    .summary-card .label { font-size: 0.8rem; color: #64748b; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.4rem; }
+    .summary-card .value { font-size: 1.6rem; font-weight: 700; line-height: 1; }
+    .summary-card .value.green { color: #16a34a; }
+    .summary-card .value.red { color: #dc2626; }
+    .summary-card .value.amber { color: #d97706; }
     .back-link {
         display: inline-flex; align-items: center; gap: 0.35rem;
         color: #6366f1; font-size: 0.88rem; font-weight: 500;
@@ -41,6 +56,32 @@
             {{ $user->name }}
         </h1>
         <p>Registros de cobros &mdash; tipo: <strong>{{ ucfirst($type) }}</strong></p>
+    </div>
+
+    @php
+        $totalBase     = $charges->sum(fn($c) => $c->baseAmount);
+        $totalMora     = $charges->sum(fn($c) => $c->penaltyAmount);
+        $totalPagado   = $charges->sum(fn($c) => $c->paidAmount);
+        $totalDebe     = max(0, ($totalBase + $totalMora) - $totalPagado);
+    @endphp
+
+    <div class="summary-grid">
+        <div class="summary-card">
+            <div class="label">Total Acumulado</div>
+            <div class="value green">${{ number_format($totalBase, 2) }}</div>
+        </div>
+        <div class="summary-card">
+            <div class="label">Total Mora</div>
+            <div class="value red">${{ number_format($totalMora, 2) }}</div>
+        </div>
+        <div class="summary-card">
+            <div class="label">Total Pagado</div>
+            <div class="value green">${{ number_format($totalPagado, 2) }}</div>
+        </div>
+        <div class="summary-card">
+            <div class="label">Total que Debe</div>
+            <div class="value {{ $totalDebe > 0 ? 'amber' : 'green' }}">${{ number_format($totalDebe, 2) }}</div>
+        </div>
     </div>
 
     <x-table.table
