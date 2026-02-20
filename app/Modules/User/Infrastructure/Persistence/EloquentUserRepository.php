@@ -1,0 +1,86 @@
+<?php
+
+namespace App\Modules\User\Infrastructure\Persistence;
+
+use App\Models\User;
+use App\Modules\User\Domain\Entities\UserEntity;
+use App\Modules\User\Domain\Repositories\UserRepositoryInterface;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
+
+class EloquentUserRepository implements UserRepositoryInterface
+{
+    public function findAll(): Collection
+    {
+        return User::orderBy('name')
+            ->get(['id', 'name', 'email', 'active', 'created_at'])
+            ->map(fn(User $model) => $this->toEntity($model));
+    }
+
+    public function findAllActive(): Collection
+    {
+        return User::where('active', true)
+            ->orderBy('name')
+            ->get(['id', 'name', 'email', 'active', 'created_at'])
+            ->map(fn(User $model) => $this->toEntity($model));
+    }
+
+    public function findById(int $id): ?UserEntity
+    {
+        $model = User::find($id);
+        return $model ? $this->toEntity($model) : null;
+    }
+
+    public function create(array $data): UserEntity
+    {
+        $model = User::create([
+            'name' => $data['name'],
+            'email' => $data['email'] ?? Str::slug($data['name']) . '@secretfriend.local',
+            'password' => bcrypt(Str::random(16)),
+            'active' => true,
+        ]);
+
+        return $this->toEntity($model);
+    }
+
+    public function update(int $id, array $data): UserEntity
+    {
+        $model = User::findOrFail($id);
+
+        if (isset($data['name'])) {
+            $model->name = $data['name'];
+        }
+
+        if (isset($data['email'])) {
+            $model->email = $data['email'];
+        }
+
+        $model->save();
+
+        return $this->toEntity($model);
+    }
+
+    public function toggleActive(int $id): UserEntity
+    {
+        $model = User::findOrFail($id);
+        $model->active = !$model->active;
+        $model->save();
+
+        return $this->toEntity($model);
+    }
+
+    public function count(): int
+    {
+        return User::count();
+    }
+
+    public function getAllIds(): array
+    {
+        return User::pluck('id')->toArray();
+    }
+
+    private function toEntity(User $model): UserEntity
+    {
+        return UserEntity::fromArray($model->toArray());
+    }
+}
