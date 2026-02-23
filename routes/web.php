@@ -15,5 +15,6 @@ Route::get('/secret-friend/{url}', [SecretFriendViewController::class, 'show'])-
 Route::prefix('fundraising')->group(function () {
     Route::get('/navidad', [App\Modules\Fundraising\Presentation\Controllers\FinanceController::class, 'navidad'])->name('fundraising.navidad');
     Route::get('/recaudaciones', [App\Modules\Fundraising\Presentation\Controllers\FinanceController::class, 'recaudaciones'])->name('fundraising.recaudaciones');
+    Route::get('/pagos', [App\Modules\Fundraising\Presentation\Controllers\FinanceController::class, 'pagos'])->name('fundraising.pagos');
     Route::get('/recaudaciones/{userId}/cargos', [App\Modules\Fundraising\Presentation\Controllers\FinanceController::class, 'cargosUsuario'])->name('fundraising.cargos-usuario');
 });

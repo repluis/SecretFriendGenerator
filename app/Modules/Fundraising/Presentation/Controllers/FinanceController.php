@@ -59,6 +59,31 @@ class FinanceController extends Controller
         ]);
     }
 
+    public function pagos(
+        Request $request,
+        GetChargesByType $getCharges,
+        GetUserBalances $getUserBalances,
+    ): View {
+        $type = $request->query('type', 'navidad');
+
+        $data = $getCharges->execute(['type' => $type]);
+        $balanceData = $getUserBalances->execute();
+
+        $summary = $data['summary'];
+        $totalCollected = $balanceData['total'];
+        $totalOwed = $summary['total_owed'];
+        $summary['total_pending'] = max(0, round($totalOwed - $totalCollected, 2));
+        $summary['progress'] = $totalOwed > 0 ? round(($totalCollected / $totalOwed) * 100) : 0;
+
+        return view('modules.fundraising.pagos', [
+            'summary' => $summary,
+            'users' => $data['users'],
+            'type' => $type,
+            'totalFromTransactions' => $totalCollected,
+            'userTransactionBalances' => $balanceData['balances'],
+        ]);
+    }
+
     public function cargosUsuario(
         int $userId,
         Request $request,

@@ -1,4 +1,4 @@
-@extends('layouts.christmas')
+@extends('layouts.festive')
 
 @section('title', 'Secret Friend Generator - Home')
 
@@ -375,6 +375,11 @@
             <h1 class="christmas-title">
                 🎄 Amigos Secretos 🎄
             </h1>
+            <div style="text-align: center; margin-top: -1.5rem; margin-bottom: 2rem;">
+                <a href="{{ route('configuracion') }}" class="christmas-btn" style="font-size: 0.85rem; text-decoration: none; display: inline-flex; align-items: center; gap: 0.4rem;">
+                    ⚙️ Configuración del Juego
+                </a>
+            </div>
 
             @if($urls->isEmpty())
                 <div class="christmas-card text-center">
