@@ -7,9 +7,9 @@ use App\Modules\Fundraising\Application\UseCases\ApplyDailyPenalties;
 use App\Modules\Fundraising\Application\UseCases\CreateMonthlyCharges;
 use App\Modules\Fundraising\Application\UseCases\SyncChargesWithTransactions;
 use App\Modules\Fundraising\Application\UseCases\UpdateChargePenalty;
+use App\Modules\Fundraising\Presentation\Requests\UpdatePenaltyRequest;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class FundraisingApiController extends Controller
@@ -58,13 +58,10 @@ class FundraisingApiController extends Controller
 
     public function updatePenalty(
         int $chargeId,
-        Request $request,
+        UpdatePenaltyRequest $request,
         UpdateChargePenalty $updatePenalty,
     ): JsonResponse {
-        $validated = $request->validate([
-            'penalty_amount' => 'required|numeric|min:0',
-            'type'           => 'sometimes|string',
-        ]);
+        $validated = $request->validated();
 
         $charge = $updatePenalty->execute([
             'charge_id'      => $chargeId,

@@ -9,6 +9,7 @@ class UserEntity
         public readonly string $name,
         public readonly ?string $email,
         public readonly bool $active,
+        public readonly ?string $identification = null,
         public readonly ?string $createdAt = null,
     ) {}
 
@@ -19,6 +20,7 @@ class UserEntity
             name: $data['name'],
             email: $data['email'] ?? null,
             active: $data['active'] ?? true,
+            identification: $data['identification'] ?? null,
             createdAt: $data['created_at'] ?? null,
         );
     }
@@ -30,6 +32,7 @@ class UserEntity
             'name' => $this->name,
             'email' => $this->email,
             'active' => $this->active,
+            'identification' => $this->identification,
             'created_at' => $this->createdAt,
         ];
     }

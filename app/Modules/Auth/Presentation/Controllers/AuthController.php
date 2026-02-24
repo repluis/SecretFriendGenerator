@@ -5,8 +5,8 @@ namespace App\Modules\Auth\Presentation\Controllers;
 use App\Http\Controllers\Controller;
 use App\Modules\Auth\Application\UseCases\LoginUser;
 use App\Modules\Auth\Application\UseCases\LogoutUser;
+use App\Modules\Auth\Presentation\Requests\LoginRequest;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 
@@ -33,13 +33,8 @@ class AuthController extends Controller
      * @param LoginUser $loginUser - Caso de uso que valida credenciales y crea la sesión.
      * @return RedirectResponse - Redirige al home si el login es exitoso, o de vuelta con errores.
      */
-    public function login(Request $request, LoginUser $loginUser): RedirectResponse
+    public function login(LoginRequest $request, LoginUser $loginUser): RedirectResponse
     {
-        $request->validate([
-            'identification' => 'required|string',
-            'password' => 'required|string',
-        ]);
-
         $result = $loginUser->execute([
             'identification' => $request->input('identification'),
             'password' => $request->input('password'),

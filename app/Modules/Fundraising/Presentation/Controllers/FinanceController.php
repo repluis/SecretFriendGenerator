@@ -12,11 +12,6 @@ use Illuminate\View\View;
 
 class FinanceController extends Controller
 {
-    public function navidad(): View
-    {
-        return view('modules.fundraising.navidad');
-    }
-
     public function recaudaciones(
         Request $request,
         GetChargesByType $getCharges,

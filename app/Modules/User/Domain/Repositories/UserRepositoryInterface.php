@@ -22,4 +22,10 @@ interface UserRepositoryInterface
     public function count(): int;
 
     public function getAllIds(): array;
+
+    public function existsByIdentification(string $identification, ?int $excludeUserId = null): bool;
+
+    public function updatePassword(int $id, string $password): UserEntity;
+
+    public function verifyPassword(int $id, string $plainPassword): bool;
 }

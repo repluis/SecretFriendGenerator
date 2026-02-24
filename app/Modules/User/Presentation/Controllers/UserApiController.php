@@ -6,9 +6,13 @@ use App\Http\Controllers\Controller;
 use App\Modules\User\Application\UseCases\CreateUser;
 use App\Modules\User\Application\UseCases\DeactivateUser;
 use App\Modules\User\Application\UseCases\GetAllUsers;
+use App\Modules\User\Application\UseCases\ResetPassword;
+use App\Modules\User\Application\UseCases\UpdateIdentification;
 use App\Modules\User\Application\UseCases\UpdateUser;
+use App\Modules\User\Presentation\Requests\StoreUserRequest;
+use App\Modules\User\Presentation\Requests\UpdateIdentificationRequest;
+use App\Modules\User\Presentation\Requests\UpdateUserRequest;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 
 class UserApiController extends Controller
 {
@@ -22,13 +26,8 @@ class UserApiController extends Controller
         ]);
     }
 
-    public function store(Request $request, CreateUser $useCase): JsonResponse
+    public function store(StoreUserRequest $request, CreateUser $useCase): JsonResponse
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'nullable|string|email|max:255|unique:users,email',
-        ]);
-
         $user = $useCase->execute([
             'name' => $request->input('name'),
             'email' => $request->input('email'),
@@ -40,12 +39,8 @@ class UserApiController extends Controller
         ], 201);
     }
 
-    public function update(Request $request, int $id, UpdateUser $useCase): JsonResponse
+    public function update(UpdateUserRequest $request, int $id, UpdateUser $useCase): JsonResponse
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
-        ]);
-
         $user = $useCase->execute([
             'id' => $id,
             'name' => $request->input('name'),
@@ -66,5 +61,26 @@ class UserApiController extends Controller
             'data' => $user,
             'message' => $user->active ? 'Usuario activado' : 'Usuario desactivado',
         ]);
+    }
+
+    public function updateIdentification(UpdateIdentificationRequest $request, int $id, UpdateIdentification $useCase): JsonResponse
+    {
+        try {
+            $user = $useCase->execute([
+                'id' => $id,
+                'identification' => $request->input('identification'),
+            ]);
+
+            return response()->json(['success' => true, 'data' => $user]);
+        } catch (\InvalidArgumentException $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 422);
+        }
+    }
+
+    public function resetPassword(int $id, ResetPassword $useCase): JsonResponse
+    {
+        $useCase->execute(['id' => $id]);
+
+        return response()->json(['success' => true, 'message' => 'Contraseña restablecida correctamente.']);
     }
 }

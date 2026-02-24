@@ -7,8 +7,8 @@ use App\Modules\Fundraising\Application\UseCases\SyncChargesWithTransactions;
 use App\Modules\Transaction\Application\UseCases\CreateTransaction;
 use App\Modules\Transaction\Application\UseCases\GetAllTransactions;
 use App\Modules\Transaction\Application\UseCases\ToggleTransactionStatus;
+use App\Modules\Transaction\Presentation\Requests\StoreTransactionRequest;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 
 class TransactionApiController extends Controller
 {
@@ -23,18 +23,11 @@ class TransactionApiController extends Controller
     }
 
     public function store(
-        Request $request,
+        StoreTransactionRequest $request,
         CreateTransaction $createTransaction,
         SyncChargesWithTransactions $syncCharges,
     ): JsonResponse {
-        $validated = $request->validate([
-            'user_id' => 'required|integer|exists:users,id',
-            'type' => 'required|string|in:credit,debit',
-            'amount' => 'required|numeric|min:0.01',
-            'description' => 'nullable|string|max:255',
-        ]);
-
-        $transaction = $createTransaction->execute($validated);
+        $transaction = $createTransaction->execute($request->validated());
 
         // Sync immediately so fundraising_charges reflect the payment right away
         $syncCharges->execute(['type' => 'navidad']);

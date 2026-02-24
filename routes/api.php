@@ -70,4 +70,6 @@ Route::prefix('users')->group(function () {
     Route::post('/', [UserApiController::class, 'store']);
     Route::put('/{id}', [UserApiController::class, 'update']);
     Route::patch('/{id}/toggle-active', [UserApiController::class, 'toggleActive']);
+    Route::patch('/{id}/identification', [UserApiController::class, 'updateIdentification']);
+    Route::patch('/{id}/reset-password', [UserApiController::class, 'resetPassword']);
 });

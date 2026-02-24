@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Modules\User\Domain\Entities\UserEntity;
 use App\Modules\User\Domain\Repositories\UserRepositoryInterface;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
 class EloquentUserRepository implements UserRepositoryInterface
@@ -13,7 +14,7 @@ class EloquentUserRepository implements UserRepositoryInterface
     public function findAll(): Collection
     {
         return User::orderBy('name')
-            ->get(['id', 'name', 'email', 'active', 'created_at'])
+            ->get(['id', 'name', 'email', 'active', 'identification', 'created_at'])
             ->map(fn(User $model) => $this->toEntity($model));
     }
 
@@ -21,7 +22,7 @@ class EloquentUserRepository implements UserRepositoryInterface
     {
         return User::where('active', true)
             ->orderBy('name')
-            ->get(['id', 'name', 'email', 'active', 'created_at'])
+            ->get(['id', 'name', 'email', 'active', 'identification', 'created_at'])
             ->map(fn(User $model) => $this->toEntity($model));
     }
 
@@ -55,6 +56,10 @@ class EloquentUserRepository implements UserRepositoryInterface
             $model->email = $data['email'];
         }
 
+        if (array_key_exists('identification', $data)) {
+            $model->identification = $data['identification'];
+        }
+
         $model->save();
 
         return $this->toEntity($model);
@@ -77,6 +82,33 @@ class EloquentUserRepository implements UserRepositoryInterface
     public function getAllIds(): array
     {
         return User::pluck('id')->toArray();
+    }
+
+    public function existsByIdentification(string $identification, ?int $excludeUserId = null): bool
+    {
+        $query = User::where('identification', $identification);
+
+        if ($excludeUserId !== null) {
+            $query->where('id', '!=', $excludeUserId);
+        }
+
+        return $query->exists();
+    }
+
+    public function updatePassword(int $id, string $password): UserEntity
+    {
+        $model = User::findOrFail($id);
+        $model->password = $password;
+        $model->save();
+
+        return $this->toEntity($model);
+    }
+
+    public function verifyPassword(int $id, string $plainPassword): bool
+    {
+        $model = User::findOrFail($id);
+
+        return Hash::check($plainPassword, $model->password);
     }
 
     private function toEntity(User $model): UserEntity
