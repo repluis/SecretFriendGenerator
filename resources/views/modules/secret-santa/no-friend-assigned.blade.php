@@ -1,6 +1,6 @@
 @extends('layouts.message')
 
-@section('title', 'Sin Amigo Asignado - Secret Friend Generator')
+@section('title', 'Sin Amigo Asignado - ' . $appName)
 
 @section('gradient-from', '#4facfe')
 @section('gradient-to', '#00f2fe')

@@ -1,6 +1,6 @@
 @extends('layouts.message')
 
-@section('title', 'Tu Amigo Secreto - Secret Friend Generator')
+@section('title', 'Tu Amigo Secreto - ' . $appName)
 
 @section('styles')
 <meta http-equiv="refresh" content="5;url=/">

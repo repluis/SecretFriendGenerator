@@ -14,6 +14,11 @@ use App\Modules\Transaction\Domain\Repositories\TransactionRepositoryInterface;
 use App\Modules\Transaction\Infrastructure\Persistence\EloquentTransactionRepository;
 use App\Modules\User\Domain\Repositories\UserRepositoryInterface;
 use App\Modules\User\Infrastructure\Persistence\EloquentUserRepository;
+use App\Modules\Shared\Domain\Repositories\ConfigurationRepositoryInterface;
+use App\Modules\Shared\Domain\Services\ConfigurationService;
+use App\Modules\Shared\Infrastructure\Persistence\EloquentConfigurationRepository;
+use App\Modules\Shared\Presentation\ViewComposers\GlobalConfigComposer;
+use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
 class ModuleServiceProvider extends ServiceProvider
@@ -52,10 +57,29 @@ class ModuleServiceProvider extends ServiceProvider
             UserRepositoryInterface::class,
             EloquentUserRepository::class
         );
+
+        // Auth module
+        $this->app->bind(
+            \App\Modules\Auth\Domain\Repositories\AuthRepositoryInterface::class,
+            \App\Modules\Auth\Infrastructure\Persistence\EloquentAuthRepository::class
+        );
+
+        // Configuration module — singleton so DB is hit only once per request
+        $this->app->bind(
+            ConfigurationRepositoryInterface::class,
+            EloquentConfigurationRepository::class
+        );
+
+        $this->app->singleton(ConfigurationService::class, function ($app) {
+            return new ConfigurationService(
+                $app->make(ConfigurationRepositoryInterface::class)
+            );
+        });
     }
 
     public function boot(): void
     {
-        //
+        // Share global config to ALL Blade views (like HandleInertiaRequests for Inertia)
+        View::composer('*', GlobalConfigComposer::class);
     }
 }

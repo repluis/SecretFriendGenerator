@@ -1,6 +1,6 @@
 @extends('layouts.christmas')
 
-@section('title', 'Secret Friend Generator - Configuración')
+@section('title', $appName . ' - Configuración')
 
 @section('styles')
     <style>

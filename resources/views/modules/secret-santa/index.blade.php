@@ -1,6 +1,6 @@
 @extends('layouts.festive')
 
-@section('title', 'Secret Friend Generator - Home')
+@section('title', $appName . ' - Home')
 
 @section('styles')
     <style>

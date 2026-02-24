@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>@yield('title', 'Secret Friend Generator')</title>
+    <title>@yield('title', $appName)</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
         body {

@@ -1,6 +1,6 @@
 @extends('layouts.christmas')
 
-@section('title', 'Administración - Secret Friend Generator')
+@section('title', 'Administración - ' . $appName)
 
 @section('content')
     <div class="container mx-auto px-4 py-8">

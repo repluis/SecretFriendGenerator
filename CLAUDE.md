@@ -95,6 +95,20 @@ Controller → UseCase → RepositoryInterface → EloquentRepository → Databa
 - **Use Cases**: GetAllUsers, CreateUser, UpdateUser, DeactivateUser (toggle active)
 - **Controller**: UserApiController
 
+### Shared / Configuration
+- **Table**: `configurations` — columns: `id`, `variable` (unique), `value`, `timestamps`
+- **Repository Interface**: `Shared/Domain/Repositories/ConfigurationRepositoryInterface` — `all()`, `get()`, `set()`
+- **Repository Implementation**: `Shared/Infrastructure/Persistence/EloquentConfigurationRepository`
+- **Model**: `Shared/Infrastructure/Persistence/Models/ConfigurationModel`
+- **Service**: `Shared/Domain/Services/ConfigurationService` — **singleton**, loads all rows once per request (in-memory cache). Use `$service->get('key', $default)` and `$service->all()`.
+- **View Composer**: `Shared/Presentation/ViewComposers/GlobalConfigComposer` — registered for `*` (all views) in `ModuleServiceProvider::boot()`.
+- **Variables available in every Blade view** (no need to pass from controller):
+  - `$appName` — value of `app_name` row
+  - `$appDescription` — value of `app_description` row
+  - `$appConfig` — full `['variable' => 'value']` array for any custom key
+- **Adding a new global variable**: insert a row in `configurations` table, then read it in views via `$appConfig['my_key']` or inject `ConfigurationService` in any class.
+- **Rule**: NEVER hardcode the app name or global UI strings in views/layouts — always use `$appName` / `$appConfig`.
+
 ## Routes
 
 ### Web

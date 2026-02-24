@@ -1,6 +1,6 @@
 @extends('layouts.message')
 
-@section('title', 'Ya Visto - Secret Friend Generator')
+@section('title', 'Ya Visto - ' . $appName)
 
 @section('gradient-from', '#fa709a')
 @section('gradient-to', '#fee140')
