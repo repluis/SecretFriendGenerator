@@ -14,7 +14,14 @@
         padding: 0.45rem 1rem; border-radius: 0.5rem; font-size: 0.85rem;
         font-weight: 600; cursor: pointer; white-space: nowrap; transition: background .15s;
     }
-    .btn-reset-data:hover { background: #fca5a5; }
+    .btn-reset-data:hover:not(:disabled) { background: #fca5a5; }
+    .btn-reset-data:disabled {
+        background: #f1f5f9;
+        color: #cbd5e1;
+        border-color: #e2e8f0;
+        cursor: not-allowed;
+        opacity: 0.6;
+    }
     .btn-copy-resumen {
         display: inline-flex; align-items: center; gap: 0.4rem;
         background: #dcfce7; color: #166534; border: 1px solid #86efac;
@@ -29,8 +36,14 @@
         padding: 0.45rem 1rem; border-radius: 0.5rem; font-size: 0.85rem;
         font-weight: 600; cursor: pointer; white-space: nowrap; transition: background .15s;
     }
-    .btn-run-fundraising:hover { background: #ddd6fe; }
-    .btn-run-fundraising:disabled { opacity: 0.6; cursor: not-allowed; }
+    .btn-run-fundraising:hover:not(:disabled) { background: #ddd6fe; }
+    .btn-run-fundraising:disabled { 
+        opacity: 0.6; 
+        cursor: not-allowed;
+        background: #f1f5f9;
+        color: #cbd5e1;
+        border-color: #e2e8f0;
+    }
     .header-actions { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; }
     .modal-warning { color: #7f1d1d; font-size: 0.9rem; margin: 0.5rem 0 1.25rem; line-height: 1.5; }
     .modal-warning strong { display: block; font-size: 1rem; margin-bottom: 0.35rem; }
@@ -44,13 +57,24 @@
             <h1>Recaudaciones &mdash; {{ ucfirst($type) }}</h1>
             <p>Control de cobros mensuales. Cada 15 se cobra $1.00, mora diaria de $0.05 por atraso.</p>
             <div class="header-actions">
-                <button class="btn-run-fundraising" id="btn-run-fundraising" onclick="runFundraisingManual()">
+                <button 
+                    class="btn-run-fundraising" 
+                    id="btn-run-fundraising" 
+                    onclick="runFundraisingManual()"
+                    {{ Auth::user()->isAdmin() ? '' : 'disabled' }}
+                    title="{{ Auth::user()->isAdmin() ? 'Ejecutar cobro manual' : 'Solo administradores pueden ejecutar cobros' }}"
+                >
                     &#9654; Ejecutar cobro manual
                 </button>
                 <button class="btn-copy-resumen" id="btn-copy-resumen" onclick="copyResumen()">
                     &#128203; Copiar resumen
                 </button>
-                <button class="btn-reset-data" onclick="openResetModal()">
+                <button 
+                    class="btn-reset-data" 
+                    onclick="openResetModal()"
+                    {{ Auth::user()->isAdmin() ? '' : 'disabled' }}
+                    title="{{ Auth::user()->isAdmin() ? 'Eliminar todos los datos' : 'Solo administradores pueden eliminar datos' }}"
+                >
                     &#9888; Eliminar todos los datos
                 </button>
             </div>
@@ -144,8 +168,20 @@
             </td>
             <td>
                 <div class="pay-form">
-                    <input type="number" step="0.01" min="0.01" placeholder="0.00" id="pay-amount-{{ $user['user_id'] }}">
-                    <button class="btn-pay" onclick="createPayment({{ $user['user_id'] }}, '{{ addslashes($user['user_name']) }}')">
+                    <input 
+                        type="number" 
+                        step="0.01" 
+                        min="0.01" 
+                        placeholder="0.00" 
+                        id="pay-amount-{{ $user['user_id'] }}"
+                        {{ Auth::user()->isAdmin() ? '' : 'disabled' }}
+                    >
+                    <button 
+                        class="btn-pay" 
+                        onclick="createPayment({{ $user['user_id'] }}, '{{ addslashes($user['user_name']) }}')"
+                        {{ Auth::user()->isAdmin() ? '' : 'disabled' }}
+                        title="{{ Auth::user()->isAdmin() ? 'Registrar pago' : 'Solo administradores pueden registrar pagos' }}"
+                    >
                         Pagar
                     </button>
                     <a
@@ -198,6 +234,8 @@
                 <button
                     class="btn-toggle {{ $tx->active ? 'active' : 'inactive' }}"
                     onclick="toggleTransaction({{ $tx->id }})"
+                    {{ Auth::user()->isAdmin() ? '' : 'disabled' }}
+                    title="{{ Auth::user()->isAdmin() ? ($tx->active ? 'Desactivar transacción' : 'Activar transacción') : 'Solo administradores pueden modificar transacciones' }}"
                 >
                     {{ $tx->active ? 'Desactivar' : 'Activar' }}
                 </button>

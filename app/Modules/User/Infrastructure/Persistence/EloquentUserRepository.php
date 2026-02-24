@@ -11,16 +11,28 @@ use Illuminate\Support\Str;
 
 class EloquentUserRepository implements UserRepositoryInterface
 {
+    /**
+     * Obtiene todos los usuarios ordenados por nombre.
+     *
+     * @return Collection - Colección de entidades de usuario.
+     */
     public function findAll(): Collection
     {
-        return User::orderBy('name')
+        return User::with('roles')
+            ->orderBy('name')
             ->get(['id', 'name', 'email', 'active', 'identification', 'created_at'])
             ->map(fn(User $model) => $this->toEntity($model));
     }
 
+    /**
+     * Obtiene todos los usuarios activos ordenados por nombre.
+     *
+     * @return Collection - Colección de entidades de usuario activos.
+     */
     public function findAllActive(): Collection
     {
-        return User::where('active', true)
+        return User::with('roles')
+            ->where('active', true)
             ->orderBy('name')
             ->get(['id', 'name', 'email', 'active', 'identification', 'created_at'])
             ->map(fn(User $model) => $this->toEntity($model));

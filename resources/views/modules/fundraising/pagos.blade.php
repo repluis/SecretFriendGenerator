@@ -129,7 +129,19 @@
         font-weight: 500; cursor: pointer; transition: background 0.2s;
         white-space: nowrap;
     }
-    .btn-pay:hover { background: #4f46e5; }
+    .btn-pay:hover:not(:disabled) { background: #4f46e5; }
+    .btn-pay:disabled {
+        background: #cbd5e1;
+        color: #94a3b8;
+        cursor: not-allowed;
+        opacity: 0.6;
+    }
+
+    .pay-form input:disabled {
+        background: #f1f5f9;
+        color: #94a3b8;
+        cursor: not-allowed;
+    }
 
     .btn-cargos {
         display: inline-flex; align-items: center; gap: 0.35rem;
@@ -233,8 +245,20 @@
                         </td>
                         <td class="mobile-actions" data-label="">
                             <div class="pay-form pay-form-mobile">
-                                <input type="number" step="0.01" min="0.01" placeholder="0.00" id="pay-amount-{{ $user['user_id'] }}">
-                                <button class="btn-pay" onclick="createPayment({{ $user['user_id'] }}, '{{ addslashes($user['user_name']) }}')">
+                                <input 
+                                    type="number" 
+                                    step="0.01" 
+                                    min="0.01" 
+                                    placeholder="0.00" 
+                                    id="pay-amount-{{ $user['user_id'] }}"
+                                    {{ Auth::user()->isAdmin() ? '' : 'disabled' }}
+                                >
+                                <button 
+                                    class="btn-pay" 
+                                    onclick="createPayment({{ $user['user_id'] }}, '{{ addslashes($user['user_name']) }}')"
+                                    {{ Auth::user()->isAdmin() ? '' : 'disabled' }}
+                                    title="{{ Auth::user()->isAdmin() ? 'Registrar pago' : 'Solo administradores pueden registrar pagos' }}"
+                                >
                                     Pagar
                                 </button>
                                 <a

@@ -2,11 +2,26 @@
     <div class="navbar-inner">
         <a href="/" class="navbar-brand">{{ $appName }}</a>
         <div class="navbar-links">
-            <a href="/" class="{{ ($active ?? '') === 'dashboard' ? 'active' : '' }}">Dashboard</a>
-            <a href="{{ route('juego') }}" class="{{ ($active ?? '') === 'juego' ? 'active' : '' }}">Juego</a>
-            <a href="{{ route('fundraising.pagos') }}" class="{{ ($active ?? '') === 'pagos' ? 'active' : '' }}">Pagos</a>
-            <a href="{{ route('fundraising.recaudaciones') }}" class="{{ ($active ?? '') === 'recaudaciones' ? 'active' : '' }}">Recaudaciones</a>
-            <a href="{{ route('usuarios') }}" class="{{ ($active ?? '') === 'usuarios' ? 'active' : '' }}">Usuarios</a>
+            @auth
+                @if(Auth::user()->hasPermission('dashboard'))
+                    <a href="/" class="{{ ($active ?? '') === 'dashboard' ? 'active' : '' }}">Dashboard</a>
+                @endif
+                @if(Auth::user()->hasPermission('juego'))
+                    <a href="{{ route('juego') }}" class="{{ ($active ?? '') === 'juego' ? 'active' : '' }}">Juego</a>
+                @endif
+                @if(Auth::user()->hasPermission('pagos'))
+                    <a href="{{ route('fundraising.pagos') }}" class="{{ ($active ?? '') === 'pagos' ? 'active' : '' }}">Pagos</a>
+                @endif
+                @if(Auth::user()->hasPermission('recaudaciones'))
+                    <a href="{{ route('fundraising.recaudaciones') }}" class="{{ ($active ?? '') === 'recaudaciones' ? 'active' : '' }}">Recaudaciones</a>
+                @endif
+                @if(Auth::user()->hasPermission('usuarios'))
+                    <a href="{{ route('usuarios') }}" class="{{ ($active ?? '') === 'usuarios' ? 'active' : '' }}">Usuarios</a>
+                @endif
+                @if(Auth::user()->hasPermission('admin'))
+                    <a href="{{ route('admin') }}" class="{{ ($active ?? '') === 'admin' ? 'active' : '' }}">👑 Admin</a>
+                @endif
+            @endauth
         </div>
         @auth
         <div style="display: flex; align-items: center; gap: 0.75rem;">

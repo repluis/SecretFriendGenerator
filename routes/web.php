@@ -44,6 +44,11 @@ Route::middleware(AuthenticateUser::class)->group(function () {
     // Usuarios
     Route::get('/usuarios', [UserWebController::class, 'index'])->name('usuarios');
 
+    // Panel de administración (solo administradores)
+    Route::middleware(['admin'])->group(function () {
+        Route::get('/admin', [\App\Modules\Admin\Presentation\Controllers\AdminController::class, 'index'])->name('admin');
+    });
+
     // Perfil
     Route::get('/perfil', [ProfileController::class, 'show'])->name('perfil');
     Route::post('/perfil/nombre', [ProfileController::class, 'updateName'])->name('perfil.nombre');

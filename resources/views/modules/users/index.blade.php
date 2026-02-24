@@ -158,6 +158,26 @@
     }
     .badge-active { background: #dcfce7; color: #15803d; }
     .badge-inactive { background: #f1f5f9; color: #64748b; }
+    .badge-admin { 
+        background: linear-gradient(135deg, #fef3c7, #fde68a); 
+        color: #92400e; 
+        border: 1px solid #fbbf24;
+    }
+    .badge-finance {
+        background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+        color: #065f46;
+        border: 1px solid #10b981;
+    }
+    .badge-user { 
+        background: #dbeafe; 
+        color: #1e40af; 
+        border: 1px solid #93c5fd;
+    }
+    .badge-empty { 
+        background: #f1f5f9; 
+        color: #94a3b8; 
+        font-style: italic;
+    }
 
     .toast {
         position: fixed;
@@ -193,6 +213,7 @@
                     <tr>
                         <th>Nombre</th>
                         <th>Identificación</th>
+                        <th>Rol</th>
                         <th>Estado</th>
                         <th>Acciones</th>
                     </tr>
@@ -216,16 +237,35 @@
                                 <span class="id-value {{ $user->identification ? '' : 'empty' }}" id="id-val-{{ $user->id }}">
                                     {{ $user->identification ?? 'Sin identificación' }}
                                 </span>
-                                <button class="btn-icon edit" onclick="startEdit({{ $user->id }}, '{{ addslashes($user->identification ?? '') }}')" title="Editar">✏️</button>
+                                @if(Auth::user()->isAdmin())
+                                    <button class="btn-icon edit" onclick="startEdit({{ $user->id }}, '{{ addslashes($user->identification ?? '') }}')" title="Editar">✏️</button>
+                                @endif
                             </div>
-                            <div class="id-edit-form" id="edit-{{ $user->id }}">
-                                <input type="text" class="id-input" id="input-{{ $user->id }}"
-                                    value="{{ $user->identification ?? '' }}"
-                                    placeholder="Ej: CC-123456"
-                                    maxlength="100">
-                                <button class="btn-icon save" onclick="saveIdentification({{ $user->id }})" title="Guardar">✅</button>
-                                <button class="btn-icon cancel" onclick="cancelEdit({{ $user->id }}, '{{ addslashes($user->identification ?? '') }}')" title="Cancelar">✖️</button>
-                            </div>
+                            @if(Auth::user()->isAdmin())
+                                <div class="id-edit-form" id="edit-{{ $user->id }}">
+                                    <input type="text" class="id-input" id="input-{{ $user->id }}"
+                                        value="{{ $user->identification ?? '' }}"
+                                        placeholder="Ej: CC-123456"
+                                        maxlength="100">
+                                    <button class="btn-icon save" onclick="saveIdentification({{ $user->id }})" title="Guardar">✅</button>
+                                    <button class="btn-icon cancel" onclick="cancelEdit({{ $user->id }}, '{{ addslashes($user->identification ?? '') }}')" title="Cancelar">✖️</button>
+                                </div>
+                            @endif
+                        </td>
+                        <td>
+                            @if($user->roles->isNotEmpty())
+                                @foreach($user->roles as $role)
+                                    @if($role->name === 'admin')
+                                        <span class="badge badge-admin">👑 Administrador</span>
+                                    @elseif($role->name === 'finance')
+                                        <span class="badge badge-finance">💰 Finanzas</span>
+                                    @else
+                                        <span class="badge badge-user">👤 Usuario</span>
+                                    @endif
+                                @endforeach
+                            @else
+                                <span class="badge badge-empty">Sin rol</span>
+                            @endif
                         </td>
                         <td>
                             <span class="badge {{ $user->active ? 'badge-active' : 'badge-inactive' }}">
@@ -233,14 +273,18 @@
                             </span>
                         </td>
                         <td>
-                            <button class="btn-reset" onclick="resetPassword({{ $user->id }}, '{{ addslashes($user->name) }}')">
-                                🔑 Restablecer contraseña
-                            </button>
+                            @if(Auth::user()->isAdmin())
+                                <button class="btn-reset" onclick="resetPassword({{ $user->id }}, '{{ addslashes($user->name) }}')">
+                                    🔑 Restablecer contraseña
+                                </button>
+                            @else
+                                <span style="color: #94a3b8; font-size: 0.85rem; font-style: italic;">Solo administradores</span>
+                            @endif
                         </td>
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="4" style="text-align: center; padding: 2.5rem; color: #94a3b8;">
+                        <td colspan="5" style="text-align: center; padding: 2.5rem; color: #94a3b8;">
                             No hay usuarios registrados.
                         </td>
                     </tr>

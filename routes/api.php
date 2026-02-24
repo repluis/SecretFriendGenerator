@@ -50,26 +50,47 @@ Route::prefix('game-config')->group(function () {
     Route::post('/reset', [GameConfigApiController::class, 'resetGame']);
 });
 
-// Rutas de recaudaciones
-Route::prefix('fundraising')->group(function () {
+// Rutas de recaudaciones (requieren autenticación y rol admin)
+Route::prefix('fundraising')->middleware(['admin'])->group(function () {
     Route::post('/run-manual', [FundraisingApiController::class, 'runManual']);
     Route::delete('/reset-data', [FundraisingApiController::class, 'resetData']);
     Route::patch('/charges/{chargeId}/penalty', [FundraisingApiController::class, 'updatePenalty']);
 });
 
-// Rutas de transacciones
+// Rutas de transacciones (requieren autenticación y rol admin para crear/modificar)
 Route::prefix('transactions')->group(function () {
     Route::get('/', [TransactionApiController::class, 'index']);
-    Route::post('/', [TransactionApiController::class, 'store']);
-    Route::patch('/{id}/toggle-active', [TransactionApiController::class, 'toggleActive']);
+    
+    // Solo administradores pueden crear y modificar transacciones
+    Route::middleware(['admin'])->group(function () {
+        Route::post('/', [TransactionApiController::class, 'store']);
+        Route::patch('/{id}/toggle-active', [TransactionApiController::class, 'toggleActive']);
+    });
 });
 
-// Rutas de usuarios
+// Rutas de usuarios (requieren autenticación y rol admin para modificar)
 Route::prefix('users')->group(function () {
     Route::get('/', [UserApiController::class, 'index']);
-    Route::post('/', [UserApiController::class, 'store']);
-    Route::put('/{id}', [UserApiController::class, 'update']);
-    Route::patch('/{id}/toggle-active', [UserApiController::class, 'toggleActive']);
-    Route::patch('/{id}/identification', [UserApiController::class, 'updateIdentification']);
-    Route::patch('/{id}/reset-password', [UserApiController::class, 'resetPassword']);
+    
+    // Solo administradores pueden crear y modificar usuarios
+    Route::middleware(['admin'])->group(function () {
+        Route::post('/', [UserApiController::class, 'store']);
+        Route::put('/{id}', [UserApiController::class, 'update']);
+        Route::patch('/{id}/toggle-active', [UserApiController::class, 'toggleActive']);
+        Route::patch('/{id}/identification', [UserApiController::class, 'updateIdentification']);
+        Route::patch('/{id}/reset-password', [UserApiController::class, 'resetPassword']);
+    });
+});
+
+// Rutas de administración (solo administradores)
+Route::prefix('admin')->middleware(['admin'])->group(function () {
+    Route::patch('/users/{id}/name', [\App\Modules\Admin\Presentation\Controllers\AdminApiController::class, 'updateName']);
+    Route::patch('/users/{id}/email', [\App\Modules\Admin\Presentation\Controllers\AdminApiController::class, 'updateEmail']);
+    Route::patch('/users/{id}/roles', [\App\Modules\Admin\Presentation\Controllers\AdminApiController::class, 'updateRoles']);
+    Route::patch('/users/{id}/reset-password', [\App\Modules\Admin\Presentation\Controllers\AdminApiController::class, 'resetPassword']);
+    
+    // Gestión de roles
+    Route::post('/roles', [\App\Modules\Admin\Presentation\Controllers\AdminApiController::class, 'createRole']);
+    Route::delete('/roles/{id}', [\App\Modules\Admin\Presentation\Controllers\AdminApiController::class, 'deleteRole']);
+    Route::patch('/roles/{id}/permissions', [\App\Modules\Admin\Presentation\Controllers\AdminApiController::class, 'updateRolePermissions']);
 });

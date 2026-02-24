@@ -59,9 +59,39 @@ class User extends Authenticatable
 
     /**
      * Check if user has a specific role.
+     *
+     * @param string $roleName - Nombre del rol a verificar.
+     * @return bool - True si el usuario tiene el rol, false en caso contrario.
      */
     public function hasRole(string $roleName): bool
     {
         return $this->roles()->where('name', $roleName)->exists();
+    }
+
+    /**
+     * Verifica si el usuario tiene el rol de administrador.
+     *
+     * @return bool - True si el usuario es administrador, false en caso contrario.
+     */
+    public function isAdmin(): bool
+    {
+        return $this->hasRole('admin');
+    }
+
+    /**
+     * Verifica si el usuario tiene permiso para ver una sección.
+     *
+     * @param string $permission - Nombre del permiso (ej: 'dashboard', 'pagos').
+     * @return bool - True si tiene permiso, false en caso contrario.
+     */
+    public function hasPermission(string $permission): bool
+    {
+        foreach ($this->roles as $role) {
+            if ($role->hasPermission($permission)) {
+                return true;
+            }
+        }
+        
+        return false;
     }
 }

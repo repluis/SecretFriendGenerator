@@ -89,8 +89,13 @@
             font-weight: 500; cursor: pointer; transition: background 0.2s;
         }
 
-        .btn-pay:hover { background: #4f46e5; }
-        .btn-pay:disabled { background: #cbd5e1; cursor: not-allowed; }
+        .btn-pay:hover:not(:disabled) { background: #4f46e5; }
+        .btn-pay:disabled { 
+            background: #cbd5e1; 
+            color: #94a3b8;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
 
         .btn-toggle {
             display: inline-flex; align-items: center; gap: 0.35rem;
@@ -99,9 +104,15 @@
         }
 
         .btn-toggle.active { background: #fee2e2; color: #dc2626; }
-        .btn-toggle.active:hover { background: #fecaca; }
+        .btn-toggle.active:hover:not(:disabled) { background: #fecaca; }
         .btn-toggle.inactive { background: #dcfce7; color: #16a34a; }
-        .btn-toggle.inactive:hover { background: #bbf7d0; }
+        .btn-toggle.inactive:hover:not(:disabled) { background: #bbf7d0; }
+        .btn-toggle:disabled {
+            background: #f1f5f9;
+            color: #cbd5e1;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
 
         .btn-cancel {
             padding: 0.5rem 1.1rem; border-radius: 8px;
@@ -283,6 +294,11 @@
             font-size: 0.8rem; text-align: right;
         }
         .pay-form input:focus { outline: none; border-color: #6366f1; box-shadow: 0 0 0 2px rgba(99,102,241,0.1); }
+        .pay-form input:disabled {
+            background: #f1f5f9;
+            color: #94a3b8;
+            cursor: not-allowed;
+        }
 
         /* Progress bar */
         .progress-section {
