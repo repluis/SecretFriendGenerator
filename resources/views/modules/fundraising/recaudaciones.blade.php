@@ -6,8 +6,8 @@
 <style>
     .page-header { margin-bottom: 2.5rem; }
     .page-header h1 { font-size: 2rem; font-weight: 700; margin-bottom: 0.25rem; }
-    .page-header p { color: #64748b; }
-    .page-header-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
+    .page-header p { color: #64748b; margin-bottom: 1rem; }
+    .page-header-row { display: flex; flex-direction: column; gap: 0; }
     .btn-reset-data {
         display: inline-flex; align-items: center; gap: 0.4rem;
         background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5;
@@ -23,6 +23,14 @@
     }
     .btn-copy-resumen:hover { background: #bbf7d0; }
     .btn-copy-resumen.copied { background: #166534; color: #fff; border-color: #166534; }
+    .btn-run-fundraising {
+        display: inline-flex; align-items: center; gap: 0.4rem;
+        background: #ede9fe; color: #4f46e5; border: 1px solid #c4b5fd;
+        padding: 0.45rem 1rem; border-radius: 0.5rem; font-size: 0.85rem;
+        font-weight: 600; cursor: pointer; white-space: nowrap; transition: background .15s;
+    }
+    .btn-run-fundraising:hover { background: #ddd6fe; }
+    .btn-run-fundraising:disabled { opacity: 0.6; cursor: not-allowed; }
     .header-actions { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; }
     .modal-warning { color: #7f1d1d; font-size: 0.9rem; margin: 0.5rem 0 1.25rem; line-height: 1.5; }
     .modal-warning strong { display: block; font-size: 1rem; margin-bottom: 0.35rem; }
@@ -33,11 +41,12 @@
 @section('content')
     <div class="page-header">
         <div class="page-header-row">
-            <div>
-                <h1>Recaudaciones &mdash; {{ ucfirst($type) }}</h1>
-                <p>Control de cobros mensuales. Cada 15 se cobra $1.00, mora diaria de $0.05 por atraso.</p>
-            </div>
+            <h1>Recaudaciones &mdash; {{ ucfirst($type) }}</h1>
+            <p>Control de cobros mensuales. Cada 15 se cobra $1.00, mora diaria de $0.05 por atraso.</p>
             <div class="header-actions">
+                <button class="btn-run-fundraising" id="btn-run-fundraising" onclick="runFundraisingManual()">
+                    &#9654; Ejecutar cobro manual
+                </button>
                 <button class="btn-copy-resumen" id="btn-copy-resumen" onclick="copyResumen()">
                     &#128203; Copiar resumen
                 </button>
@@ -356,6 +365,26 @@
         } catch (error) {
             console.error('Error:', error);
             alert('Error al registrar el pago');
+        }
+    }
+
+    async function runFundraisingManual() {
+        const btn = document.getElementById('btn-run-fundraising');
+        if (!confirm('Esto creará cobros para la fecha de hoy y aplicará multas pendientes. ¿Continuar?')) return;
+        btn.disabled = true; btn.textContent = 'Ejecutando...';
+        try {
+            const response = await fetch('/api/fundraising/run-manual', {
+                method: 'POST',
+                headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': csrfToken }
+            });
+            const data = await response.json();
+            if (data.success) { alert(data.message); location.reload(); }
+            else { alert('Error: ' + (data.message || 'No se pudo ejecutar')); }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Error al ejecutar el cobro manual');
+        } finally {
+            btn.disabled = false; btn.innerHTML = '&#9654; Ejecutar cobro manual';
         }
     }
 

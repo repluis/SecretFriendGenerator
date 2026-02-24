@@ -112,7 +112,6 @@
             <div class="module-card-footer">
                 <div class="module-btn-group">
                     <a href="{{ route('fundraising.recaudaciones') }}" class="module-btn primary">Ver recaudaciones</a>
-                    <a href="{{ route('fundraising.navidad') }}" class="module-btn secondary">Navidad</a>
                     <button class="module-btn secondary" id="btnRunFundraising" onclick="runFundraisingManual()">Ejecutar cobro manual</button>
                 </div>
             </div>
