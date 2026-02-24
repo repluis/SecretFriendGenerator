@@ -39,29 +39,6 @@
         />
     </div>
 
-    <!-- Gráficas -->
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: var(--spacing-xl); margin-bottom: var(--spacing-xl);">
-        <!-- Gráfica de Recaudación -->
-        <div class="card">
-            <div class="card-header">
-                <h3 style="font-size: 1.125rem; font-weight: 600;">💰 Estado de Recaudación</h3>
-            </div>
-            <div class="card-body">
-                <canvas id="fundraisingChart" style="max-height: 300px;"></canvas>
-            </div>
-        </div>
-
-        <!-- Gráfica de Usuarios por Estado -->
-        <div class="card">
-            <div class="card-header">
-                <h3 style="font-size: 1.125rem; font-weight: 600;">👥 Usuarios por Estado</h3>
-            </div>
-            <div class="card-body">
-                <canvas id="usersChart" style="max-height: 300px;"></canvas>
-            </div>
-        </div>
-    </div>
-
     <!-- Tablas de Rankings -->
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(450px, 1fr)); gap: var(--spacing-xl); margin-bottom: var(--spacing-xl);">
         <!-- Top Morosos -->
@@ -71,39 +48,38 @@
                     <tr>
                         <th style="width: 10%;">#</th>
                         <th style="width: 50%;">Usuario</th>
-                        <th style="width: 40%;">Saldo Pendiente</th>
+                        <th style="width: 40%;">Mora Acumulada</th>
                     </tr>
                 </thead>
                 <tbody>
                     @php
-                        $topDebtors = collect($users)->map(function($user) use ($userBalances) {
-                            $balance = $userBalances[$user->id] ?? 0;
-                            return [
-                                'user' => $user,
-                                'debt' => $balance < 0 ? abs($balance) : 0
-                            ];
-                        })->filter(function($item) {
-                            return $item['debt'] > 0;
-                        })->sortByDesc('debt')->take(5);
+                        $topDebtors = collect($usersWithCharges ?? [])->filter(function($userCharge) {
+                            return ($userCharge['total_penalty'] ?? 0) > 0;
+                        })->sortByDesc('total_penalty')->take(5);
                     @endphp
                     
                     @forelse($topDebtors as $index => $debtor)
-                        <tr>
-                            <td>
-                                <span class="font-bold" style="color: var(--color-slate-500);">{{ $index + 1 }}</span>
-                            </td>
-                            <td>
-                                <div class="table-cell-user">
-                                    <x-avatar :name="$debtor['user']->name" size="sm" />
-                                    <span class="table-user-name">{{ $debtor['user']->name }}</span>
-                                </div>
-                            </td>
-                            <td>
-                                <span class="font-bold" style="color: var(--color-danger-600);">
-                                    -${{ number_format($debtor['debt'], 2) }}
-                                </span>
-                            </td>
-                        </tr>
+                        @php
+                            $user = $users->firstWhere('id', $debtor['user_id']);
+                        @endphp
+                        @if($user)
+                            <tr>
+                                <td>
+                                    <span class="font-bold" style="color: var(--color-slate-500);">{{ $index + 1 }}</span>
+                                </td>
+                                <td>
+                                    <div class="table-cell-user">
+                                        <x-avatar :name="$user->name" size="sm" />
+                                        <span class="table-user-name">{{ $user->name }}</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="font-bold" style="color: var(--color-danger-600);">
+                                        ${{ number_format($debtor['total_penalty'], 2) }}
+                                    </span>
+                                </td>
+                            </tr>
+                        @endif
                     @empty
                         <tr>
                             <td colspan="3">
@@ -169,6 +145,29 @@
                 </tbody>
             </table>
         </x-table-container>
+    </div>
+
+    <!-- Gráficas -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: var(--spacing-xl); margin-bottom: var(--spacing-xl);">
+        <!-- Gráfica de Recaudación -->
+        <div class="card">
+            <div class="card-header">
+                <h3 style="font-size: 1.125rem; font-weight: 600;">💰 Estado de Recaudación</h3>
+            </div>
+            <div class="card-body">
+                <canvas id="fundraisingChart" style="max-height: 300px;"></canvas>
+            </div>
+        </div>
+
+        <!-- Gráfica de Usuarios por Estado -->
+        <div class="card">
+            <div class="card-header">
+                <h3 style="font-size: 1.125rem; font-weight: 600;">� Distribución de Deudas</h3>
+            </div>
+            <div class="card-body">
+                <canvas id="usersChart" style="max-height: 300px;"></canvas>
+            </div>
+        </div>
     </div>
 
     <!-- Módulos de Acceso Rápido -->
@@ -271,12 +270,28 @@
     const fundraisingPending = {{ $fundraisingPending }};
     
     @php
-        $activeUsers = $users->where('active', true)->count();
-        $inactiveUsers = $users->where('active', false)->count();
+        // Calcular distribución de deudas
+        $usersUpToDate = 0;
+        $usersPartialDebt = 0;
+        $usersTotalDebt = 0;
+        
+        foreach($usersWithCharges ?? [] as $userCharge) {
+            $balance = $userCharge['balance'] ?? 0;
+            $totalOwed = $userCharge['total_owed'] ?? 0;
+            
+            if ($balance <= 0) {
+                $usersUpToDate++;
+            } elseif ($balance < $totalOwed) {
+                $usersPartialDebt++;
+            } else {
+                $usersTotalDebt++;
+            }
+        }
     @endphp
     
-    const activeUsers = {{ $activeUsers }};
-    const inactiveUsers = {{ $inactiveUsers }};
+    const usersUpToDate = {{ $usersUpToDate }};
+    const usersPartialDebt = {{ $usersPartialDebt }};
+    const usersTotalDebt = {{ $usersTotalDebt }};
 
     // Gráfica de Recaudación (Doughnut)
     const fundraisingCtx = document.getElementById('fundraisingChart').getContext('2d');
@@ -317,20 +332,19 @@
         }
     });
 
-    // Gráfica de Usuarios (Bar)
+    // Gráfica de Distribución de Deudas (Pie)
     const usersCtx = document.getElementById('usersChart').getContext('2d');
     new Chart(usersCtx, {
-        type: 'bar',
+        type: 'pie',
         data: {
-            labels: ['Activos', 'Inactivos'],
+            labels: ['Al Día', 'Deuda Parcial', 'Deuda Total'],
             datasets: [{
-                label: 'Usuarios',
-                data: [activeUsers, inactiveUsers],
+                data: [usersUpToDate, usersPartialDebt, usersTotalDebt],
                 backgroundColor: [
-                    '#16a34a', // success
-                    '#94a3b8'  // slate
+                    '#16a34a', // success - Al día
+                    '#d97706', // warning - Deuda parcial
+                    '#dc2626'  // danger - Deuda total
                 ],
-                borderRadius: 8,
                 borderWidth: 0
             }]
         },
@@ -339,21 +353,21 @@
             maintainAspectRatio: true,
             plugins: {
                 legend: {
-                    display: false
+                    position: 'bottom',
+                    labels: {
+                        padding: 15,
+                        font: {
+                            size: 13
+                        }
+                    }
                 },
                 tooltip: {
                     callbacks: {
                         label: function(context) {
-                            return context.parsed.y + ' usuarios';
+                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                            const percentage = ((context.parsed / total) * 100).toFixed(1);
+                            return context.label + ': ' + context.parsed + ' (' + percentage + '%)';
                         }
-                    }
-                }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    ticks: {
-                        stepSize: 1
                     }
                 }
             }

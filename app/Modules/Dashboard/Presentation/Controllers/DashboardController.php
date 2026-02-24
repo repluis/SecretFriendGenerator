@@ -37,6 +37,7 @@ class DashboardController extends Controller
         $fundraisingPending   = $fundraisingData['summary']['total_pending'];
         $fundraisingCollected = $fundraisingData['summary']['total_collected'];
         $fundraisingUsers     = $fundraisingData['summary']['total_users'];
+        $usersWithCharges     = $fundraisingData['users']; // Datos de usuarios con cobros y moras
 
         $balanceData  = $getUserBalances->execute();
         $userBalances = $balanceData['balances'];
@@ -52,6 +53,7 @@ class DashboardController extends Controller
             'fundraisingCollected'=> $fundraisingCollected,
             'fundraisingUsers'    => $fundraisingUsers,
             'userBalances'        => $userBalances,
+            'usersWithCharges'    => $usersWithCharges, // Agregar datos de moras
         ]);
     }
 }

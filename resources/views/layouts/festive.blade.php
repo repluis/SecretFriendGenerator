@@ -6,6 +6,9 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Secret Santa')</title>
     
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -14,8 +17,8 @@
     <!-- Design System -->
     <link rel="stylesheet" href="{{ asset('css/design-system.css') }}">
     
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
+        body { font-family: 'Inter', sans-serif; }
         /* Christmas Theme Override */
         body {
             background: #0f4c3a;

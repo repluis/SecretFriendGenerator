@@ -6,6 +6,9 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', $appName)</title>
     
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -14,14 +17,12 @@
     <!-- Design System -->
     <link rel="stylesheet" href="{{ asset('css/design-system.css') }}?v={{ time() }}">
     
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
-    <style>
-        /* Estilos específicos de página se pueden agregar aquí */
+        body { font-family: 'Inter', sans-serif; }
     </style>
     @yield('styles')
 </head>
-<body>
+<body class="bg-gray-50">
     @include('layouts.partials.navbar', ['active' => $navbarActive ?? ''])
 
     <main class="main-container">

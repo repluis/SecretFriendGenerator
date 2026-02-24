@@ -3,279 +3,303 @@
 @section('title', 'Recaudaciones - ' . ucfirst($type))
 
 @section('content')
-    <x-page-header 
-        title="💰 Recaudaciones - {{ ucfirst($type) }}" 
-        subtitle="Control de cobros mensuales. Cada 15 se cobra $1.00, mora diaria de $0.05 por atraso"
-    />
+    <!-- Header -->
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900 mb-2">💰 Recaudaciones - {{ ucfirst($type) }}</h1>
+        <p class="text-gray-600">Control de cobros mensuales. Cada 15 se cobra $1.00, mora diaria de $0.05 por atraso</p>
+    </div>
 
     <!-- Action Buttons -->
-    <div style="display: flex; gap: var(--spacing-sm); margin-bottom: var(--spacing-xl); flex-wrap: wrap;">
-        <x-button 
-            variant="{{ Auth::user()->isAdmin() ? 'primary' : 'secondary' }}"
-            icon="▶️"
+    <div class="flex flex-wrap gap-3 mb-8">
+        <button 
             onclick="runFundraisingManual()"
-            :disabled="!Auth::user()->isAdmin()"
-        >
-            Ejecutar cobro manual
-        </x-button>
+            {{ Auth::user()->isAdmin() ? '' : 'disabled' }}
+            class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors {{ Auth::user()->isAdmin() ? 'bg-indigo-600 text-white hover:bg-indigo-700' : 'bg-gray-300 text-gray-500 cursor-not-allowed' }}">
+            <span>▶️</span>
+            <span>Ejecutar cobro manual</span>
+        </button>
 
-        <x-button 
-            variant="success"
-            icon="📋"
+        <button 
             onclick="copyResumen()"
             id="btn-copy-resumen"
-        >
-            Copiar resumen
-        </x-button>
+            class="inline-flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 transition-colors">
+            <span>📋</span>
+            <span>Copiar resumen</span>
+        </button>
 
-        <x-button 
-            variant="{{ Auth::user()->isAdmin() ? 'danger' : 'secondary' }}"
-            icon="⚠️"
+        <button 
             onclick="openResetModal()"
-            :disabled="!Auth::user()->isAdmin()"
-        >
-            Eliminar todos los datos
-        </x-button>
+            {{ Auth::user()->isAdmin() ? '' : 'disabled' }}
+            class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors {{ Auth::user()->isAdmin() ? 'bg-red-600 text-white hover:bg-red-700' : 'bg-gray-300 text-gray-500 cursor-not-allowed' }}">
+            <span>⚠️</span>
+            <span>Eliminar todos los datos</span>
+        </button>
     </div>
 
     <!-- Stats Grid -->
-    <div class="stats-grid">
-        <x-stat-card-modern 
-            icon="💵"
-            value="${{ number_format($totalFromTransactions, 2) }}"
-            label="Total Recaudado"
-            color="success"
-            footer="Desde transacciones activas"
-        />
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <!-- Total Recaudado -->
+        <div class="bg-white rounded-xl border border-gray-200 p-6">
+            <div class="flex items-center justify-between mb-4">
+                <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center text-2xl">
+                    💵
+                </div>
+            </div>
+            <div class="text-3xl font-bold text-gray-900 mb-1">
+                ${{ number_format($totalFromTransactions, 2) }}
+            </div>
+            <div class="text-sm font-medium text-gray-600 mb-2">Total Recaudado</div>
+            <div class="text-xs text-gray-500">Desde transacciones activas</div>
+        </div>
 
-        <x-stat-card-modern 
-            icon="📊"
-            value="${{ number_format($summary['total_owed'], 2) }}"
-            label="Total Adeudado"
-            color="primary"
-            footer="Base + moras acumuladas"
-        />
+        <!-- Total Adeudado -->
+        <div class="bg-white rounded-xl border border-gray-200 p-6">
+            <div class="flex items-center justify-between mb-4">
+                <div class="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center text-2xl">
+                    📊
+                </div>
+            </div>
+            <div class="text-3xl font-bold text-gray-900 mb-1">
+                ${{ number_format($summary['total_owed'], 2) }}
+            </div>
+            <div class="text-sm font-medium text-gray-600 mb-2">Total Adeudado</div>
+            <div class="text-xs text-gray-500">Base + moras acumuladas</div>
+        </div>
 
-        <x-stat-card-modern 
-            icon="⏳"
-            value="${{ number_format($summary['total_pending'], 2) }}"
-            label="Pendiente"
-            color="warning"
-            footer="{{ $summary['users_with_debt'] }} persona(s) con deuda"
-        />
+        <!-- Pendiente -->
+        <div class="bg-white rounded-xl border border-gray-200 p-6">
+            <div class="flex items-center justify-between mb-4">
+                <div class="w-12 h-12 bg-amber-100 rounded-lg flex items-center justify-center text-2xl">
+                    ⏳
+                </div>
+            </div>
+            <div class="text-3xl font-bold text-gray-900 mb-1">
+                ${{ number_format($summary['total_pending'], 2) }}
+            </div>
+            <div class="text-sm font-medium text-gray-600 mb-2">Pendiente</div>
+            <div class="text-xs text-gray-500">{{ $summary['users_with_debt'] }} persona(s) con deuda</div>
+        </div>
 
-        <x-stat-card-modern 
-            icon="⚠️"
-            value="${{ number_format($summary['total_penalties'], 2) }}"
-            label="Moras Acumuladas"
-            color="danger"
-            footer="$0.05 diarios por atraso"
-        />
+        <!-- Moras Acumuladas -->
+        <div class="bg-white rounded-xl border border-gray-200 p-6">
+            <div class="flex items-center justify-between mb-4">
+                <div class="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center text-2xl">
+                    ⚠️
+                </div>
+            </div>
+            <div class="text-3xl font-bold text-gray-900 mb-1">
+                ${{ number_format($summary['total_penalties'], 2) }}
+            </div>
+            <div class="text-sm font-medium text-gray-600 mb-2">Moras Acumuladas</div>
+            <div class="text-xs text-gray-500">$0.05 diarios por atraso</div>
+        </div>
     </div>
 
     <!-- Progress Bar -->
     @if($summary['total_owed'] > 0)
-    <div class="card" style="margin-bottom: var(--spacing-xl);">
-        <div class="card-body">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--spacing-md);">
-                <h3 style="font-size: 1rem; font-weight: 600; color: var(--color-slate-900);">Progreso de la recaudación</h3>
-                <span style="font-size: 1.25rem; font-weight: 700; color: var(--color-primary-600);">{{ $summary['progress'] }}%</span>
-            </div>
-            <div style="background: var(--color-slate-200); border-radius: var(--radius-full); height: 12px; overflow: hidden;">
-                <div style="background: linear-gradient(90deg, var(--color-primary-500), var(--color-primary-600)); height: 100%; border-radius: var(--radius-full); width: {{ $summary['progress'] }}%; transition: width 0.5s ease;"></div>
-            </div>
+    <div class="bg-white rounded-xl border border-gray-200 p-6 mb-8">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-base font-semibold text-gray-900">Progreso de la recaudación</h3>
+            <span class="text-xl font-bold text-indigo-600">{{ $summary['progress'] }}%</span>
+        </div>
+        <div class="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+            <div class="bg-gradient-to-r from-indigo-500 to-indigo-600 h-full rounded-full transition-all duration-500" style="width: {{ $summary['progress'] }}%"></div>
         </div>
     </div>
     @endif
 
     <!-- Tabla de Participantes -->
-    <x-table-container title="💳 Detalle por Participante">
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Participante</th>
-                    <th>Debe</th>
-                    <th>Pagado</th>
-                    <th>Mora</th>
-                    <th>Saldo</th>
-                    <th>Estado</th>
-                    <th>Acción</th>
-                </tr>
-            </thead>
-            <tbody>
-                @forelse($users as $user)
-                    @php
-                        $txBalance = $userTransactionBalances[$user['user_id']] ?? 0;
-                        $saldo = $user['total_owed'] - $txBalance;
-                    @endphp
+    <div class="bg-white rounded-xl border border-gray-200 overflow-hidden mb-8">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h2 class="text-lg font-semibold text-gray-900">💳 Detalle por Participante</h2>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead class="bg-gray-50 border-b border-gray-200">
                     <tr>
-                        <td class="text-muted text-sm">{{ $user['user_id'] }}</td>
-                        <td>
-                            <div class="table-cell-user">
-                                <x-avatar :name="$user['user_name']" size="md" />
-                                <span class="table-user-name">{{ $user['user_name'] }}</span>
-                            </div>
-                        </td>
-                        <td class="font-semibold">${{ number_format($user['total_owed'], 2) }}</td>
-                        <td>
-                            <span class="font-semibold" style="color: var(--color-success-600);">
-                                ${{ number_format($txBalance, 2) }}
-                            </span>
-                        </td>
-                        <td>
-                            @if($user['total_penalty'] > 0)
-                                <span class="font-semibold" style="color: var(--color-danger-600);">
-                                    ${{ number_format($user['total_penalty'], 2) }}
-                                </span>
-                            @else
-                                <span class="text-muted">$0.00</span>
-                            @endif
-                        </td>
-                        <td>
-                            <span class="font-bold" style="color: {{ $saldo <= 0 ? 'var(--color-success-600)' : 'var(--color-warning-600)' }};">
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-12">ID</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Participante</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Debe</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pagado</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mora</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Saldo</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acción</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    @forelse($users as $user)
+                        @php
+                            $txBalance = $userTransactionBalances[$user['user_id']] ?? 0;
+                            $saldo = $user['total_owed'] - $txBalance;
+                        @endphp
+                        <tr class="hover:bg-gray-50 transition-colors">
+                            <td class="px-4 py-4 text-sm text-gray-500">{{ $user['user_id'] }}</td>
+                            <td class="px-4 py-4">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-indigo-600 flex items-center justify-center text-white text-sm font-semibold">
+                                        {{ strtoupper(substr($user['user_name'], 0, 2)) }}
+                                    </div>
+                                    <span class="text-sm font-medium text-gray-900">{{ $user['user_name'] }}</span>
+                                </div>
+                            </td>
+                            <td class="px-4 py-4 text-sm font-semibold text-gray-900">${{ number_format($user['total_owed'], 2) }}</td>
+                            <td class="px-4 py-4 text-sm font-semibold text-green-600">${{ number_format($txBalance, 2) }}</td>
+                            <td class="px-4 py-4 text-sm font-semibold {{ $user['total_penalty'] > 0 ? 'text-red-600' : 'text-gray-400' }}">
+                                ${{ number_format($user['total_penalty'], 2) }}
+                            </td>
+                            <td class="px-4 py-4 text-sm font-bold {{ $saldo <= 0 ? 'text-green-600' : 'text-amber-600' }}">
                                 ${{ number_format($saldo, 2) }}
-                            </span>
-                        </td>
-                        <td>
-                            @if($saldo <= 0)
-                                <x-badge color="success">✅ Al día</x-badge>
-                            @elseif($txBalance > 0)
-                                <x-badge color="warning">⏳ Parcial</x-badge>
-                            @else
-                                <x-badge color="danger">❌ Pendiente</x-badge>
-                            @endif
-                        </td>
-                        <td>
-                            <div style="display: flex; gap: var(--spacing-xs); align-items: center;">
-                                <input 
-                                    type="number" 
-                                    step="0.01" 
-                                    min="0.01" 
-                                    placeholder="0.00" 
-                                    id="pay-amount-{{ $user['user_id'] }}"
-                                    class="form-input"
-                                    style="width: 90px; padding: 0.375rem 0.5rem; font-size: 0.875rem;"
-                                    {{ Auth::user()->isAdmin() ? '' : 'disabled' }}
-                                >
-                                <x-button 
-                                    variant="{{ Auth::user()->isAdmin() ? 'primary' : 'secondary' }}"
-                                    size="sm"
-                                    onclick="createPayment({{ $user['user_id'] }}, '{{ addslashes($user['user_name']) }}')"
-                                    :disabled="!Auth::user()->isAdmin()"
-                                >
-                                    Pagar
-                                </x-button>
-                                <a href="{{ route('fundraising.cargos-usuario', ['userId' => $user['user_id'], 'type' => $type]) }}" class="btn btn-ghost-primary btn-sm">
-                                    Ver Cargos
-                                </a>
-                            </div>
-                        </td>
-                    </tr>
-                @empty
-                    <tr>
-                        <td colspan="8">
-                            <div class="empty-state">
-                                <div class="empty-state-icon">💳</div>
-                                <p class="empty-state-text">No hay cobros registrados para el tipo "{{ $type }}".</p>
-                            </div>
-                        </td>
-                    </tr>
-                @endforelse
-            </tbody>
-        </table>
-    </x-table-container>
+                            </td>
+                            <td class="px-4 py-4">
+                                @if($saldo <= 0)
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                        ✅ Al día
+                                    </span>
+                                @elseif($txBalance > 0)
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
+                                        ⏳ Parcial
+                                    </span>
+                                @else
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                        ❌ Pendiente
+                                    </span>
+                                @endif
+                            </td>
+                            <td class="px-4 py-4">
+                                <div class="flex items-center gap-2">
+                                    <input 
+                                        type="number" 
+                                        step="0.01" 
+                                        min="0.01" 
+                                        placeholder="0.00" 
+                                        id="pay-amount-{{ $user['user_id'] }}"
+                                        {{ Auth::user()->isAdmin() ? '' : 'disabled' }}
+                                        class="w-24 px-2 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 {{ Auth::user()->isAdmin() ? '' : 'bg-gray-100 cursor-not-allowed' }}">
+                                    <button 
+                                        onclick="createPayment({{ $user['user_id'] }}, '{{ addslashes($user['user_name']) }}')"
+                                        {{ Auth::user()->isAdmin() ? '' : 'disabled' }}
+                                        class="px-3 py-1.5 text-sm font-medium rounded-lg transition-colors {{ Auth::user()->isAdmin() ? 'bg-indigo-600 text-white hover:bg-indigo-700' : 'bg-gray-300 text-gray-500 cursor-not-allowed' }}">
+                                        Pagar
+                                    </button>
+                                    <a href="{{ route('fundraising.cargos-usuario', ['userId' => $user['user_id'], 'type' => $type]) }}" 
+                                       class="px-3 py-1.5 text-sm font-medium text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 rounded-lg transition-colors">
+                                        Ver Cargos
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="8" class="px-4 py-12 text-center">
+                                <div class="text-6xl mb-4">💳</div>
+                                <p class="text-gray-500">No hay cobros registrados para el tipo "{{ $type }}".</p>
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+    </div>
 
     <!-- Tabla de Transacciones -->
-    <x-table-container title="📝 Transacciones">
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>Usuario</th>
-                    <th>Tipo</th>
-                    <th>Monto</th>
-                    <th>Descripción</th>
-                    <th>Estado</th>
-                    <th>Fecha</th>
-                    <th>Acción</th>
-                </tr>
-            </thead>
-            <tbody>
-                @forelse($transactions as $tx)
-                    <tr id="tx-row-{{ $tx->id }}">
-                        <td>
-                            <div class="table-cell-user">
-                                <x-avatar :name="$tx->user->name ?? '??'" size="sm" />
-                                <span class="table-user-name">{{ $tx->user->name ?? 'N/A' }}</span>
-                            </div>
-                        </td>
-                        <td>
-                            <x-badge :color="$tx->type === 'credit' ? 'success' : 'danger'">
-                                {{ $tx->type === 'credit' ? '💰 Crédito' : '💸 Débito' }}
-                            </x-badge>
-                        </td>
-                        <td>
-                            <span class="font-semibold" style="color: {{ $tx->type === 'credit' ? 'var(--color-success-600)' : 'var(--color-danger-600)' }};">
-                                {{ $tx->type === 'credit' ? '+' : '-' }}${{ number_format($tx->amount, 2) }}
-                            </span>
-                        </td>
-                        <td class="text-sm">{{ $tx->description ?? '—' }}</td>
-                        <td>
-                            <x-badge :color="$tx->active ? 'success' : 'slate'">
-                                {{ $tx->active ? '✅ Activa' : '⏸️ Inactiva' }}
-                            </x-badge>
-                        </td>
-                        <td class="text-sm text-muted">
-                            {{ $tx->created_at->format('d/m/Y H:i') }}
-                        </td>
-                        <td>
-                            <x-button 
-                                :variant="$tx->active ? 'ghost-danger' : 'ghost-success'"
-                                size="sm"
-                                onclick="toggleTransaction({{ $tx->id }})"
-                                :disabled="!Auth::user()->isAdmin()"
-                            >
-                                {{ $tx->active ? 'Desactivar' : 'Activar' }}
-                            </x-button>
-                        </td>
-                    </tr>
-                @empty
+    <div class="bg-white rounded-xl border border-gray-200 overflow-hidden mb-8">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h2 class="text-lg font-semibold text-gray-900">📝 Transacciones</h2>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead class="bg-gray-50 border-b border-gray-200">
                     <tr>
-                        <td colspan="7">
-                            <div class="empty-state">
-                                <div class="empty-state-icon">📝</div>
-                                <p class="empty-state-text">No hay transacciones registradas.</p>
-                            </div>
-                        </td>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Usuario</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Monto</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Descripción</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acción</th>
                     </tr>
-                @endforelse
-            </tbody>
-        </table>
-    </x-table-container>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    @forelse($transactions as $tx)
+                        <tr id="tx-row-{{ $tx->id }}" class="hover:bg-gray-50 transition-colors">
+                            <td class="px-4 py-4">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-indigo-600 flex items-center justify-center text-white text-xs font-semibold">
+                                        {{ strtoupper(substr($tx->user->name ?? '??', 0, 2)) }}
+                                    </div>
+                                    <span class="text-sm font-medium text-gray-900">{{ $tx->user->name ?? 'N/A' }}</span>
+                                </div>
+                            </td>
+                            <td class="px-4 py-4">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $tx->type === 'credit' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
+                                    {{ $tx->type === 'credit' ? '💰 Crédito' : '💸 Débito' }}
+                                </span>
+                            </td>
+                            <td class="px-4 py-4 text-sm font-semibold {{ $tx->type === 'credit' ? 'text-green-600' : 'text-red-600' }}">
+                                {{ $tx->type === 'credit' ? '+' : '-' }}${{ number_format($tx->amount, 2) }}
+                            </td>
+                            <td class="px-4 py-4 text-sm text-gray-600">{{ $tx->description ?? '—' }}</td>
+                            <td class="px-4 py-4">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $tx->active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800' }}">
+                                    {{ $tx->active ? '✅ Activa' : '⏸️ Inactiva' }}
+                                </span>
+                            </td>
+                            <td class="px-4 py-4 text-sm text-gray-500">
+                                {{ $tx->created_at->format('d/m/Y H:i') }}
+                            </td>
+                            <td class="px-4 py-4">
+                                <button 
+                                    onclick="toggleTransaction({{ $tx->id }})"
+                                    {{ Auth::user()->isAdmin() ? '' : 'disabled' }}
+                                    class="px-3 py-1.5 text-sm font-medium rounded-lg transition-colors {{ Auth::user()->isAdmin() ? ($tx->active ? 'text-red-600 hover:bg-red-50' : 'text-green-600 hover:bg-green-50') : 'text-gray-400 cursor-not-allowed' }}">
+                                    {{ $tx->active ? 'Desactivar' : 'Activar' }}
+                                </button>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="7" class="px-4 py-12 text-center">
+                                <div class="text-6xl mb-4">📝</div>
+                                <p class="text-gray-500">No hay transacciones registradas.</p>
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+    </div>
 
     <!-- Modal de Confirmación -->
-    <div class="modal-overlay" id="modal-reset-data">
-        <div class="modal">
-            <div class="modal-header">⚠️ Confirmar Eliminación de Datos</div>
-            <div class="modal-body">
-                <p style="color: var(--color-danger-700); margin-bottom: var(--spacing-md);">
-                    <strong style="display: block; font-size: 1rem; margin-bottom: var(--spacing-xs);">Esta acción es irreversible.</strong>
+    <div id="modal-reset-data" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl max-w-md w-full shadow-xl">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-900">⚠️ Confirmar Eliminación de Datos</h3>
+            </div>
+            <div class="px-6 py-4">
+                <p class="text-red-700 mb-4">
+                    <strong class="block text-base mb-2">Esta acción es irreversible.</strong>
                     Se eliminarán <strong>todos</strong> los usuarios, transacciones y cobros registrados.
                     ¿Estás seguro de continuar?
                 </p>
             </div>
-            <div class="modal-footer">
-                <x-button variant="secondary" onclick="closeResetModal()">
+            <div class="px-6 py-4 bg-gray-50 rounded-b-xl flex justify-end gap-3">
+                <button 
+                    onclick="closeResetModal()"
+                    class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
                     Cancelar
-                </x-button>
-                <x-button variant="danger" onclick="confirmReset()">
+                </button>
+                <button 
+                    onclick="confirmReset()"
+                    class="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors">
                     Sí, eliminar todo
-                </x-button>
+                </button>
             </div>
         </div>
     </div>
 
-    <x-toast />
+    <!-- Toast Container -->
+    <div id="toast-container" class="fixed bottom-4 right-4 z-50"></div>
 @endsection
 
 @section('scripts')
@@ -300,6 +324,29 @@ const resumenData = {
 
 function fmt(n) {
     return '$' + parseFloat(n).toFixed(2);
+}
+
+function showToast(message, type = 'info') {
+    const container = document.getElementById('toast-container');
+    const colors = {
+        success: 'bg-green-600',
+        error: 'bg-red-600',
+        warning: 'bg-amber-600',
+        info: 'bg-indigo-600'
+    };
+    
+    const toast = document.createElement('div');
+    toast.className = `${colors[type]} text-white px-6 py-3 rounded-lg shadow-lg mb-3 transform transition-all duration-300 translate-x-full`;
+    toast.textContent = message;
+    
+    container.appendChild(toast);
+    
+    setTimeout(() => toast.classList.remove('translate-x-full'), 100);
+    
+    setTimeout(() => {
+        toast.classList.add('translate-x-full');
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
 }
 
 function copyResumen() {
@@ -346,11 +393,13 @@ function copyResumen() {
     navigator.clipboard.writeText(text).then(() => {
         const btn = document.getElementById('btn-copy-resumen');
         const originalHTML = btn.innerHTML;
-        btn.innerHTML = '✅ Copiado!';
-        btn.style.background = 'var(--color-success-600)';
+        btn.innerHTML = '<span>✅</span><span>Copiado!</span>';
+        btn.classList.remove('bg-green-600', 'hover:bg-green-700');
+        btn.classList.add('bg-green-700');
         setTimeout(() => {
             btn.innerHTML = originalHTML;
-            btn.style.background = '';
+            btn.classList.remove('bg-green-700');
+            btn.classList.add('bg-green-600', 'hover:bg-green-700');
         }, 2000);
     }).catch(() => {
         showToast('No se pudo copiar al portapapeles', 'error');
@@ -358,11 +407,11 @@ function copyResumen() {
 }
 
 function openResetModal() {
-    document.getElementById('modal-reset-data').classList.add('active');
+    document.getElementById('modal-reset-data').classList.remove('hidden');
 }
 
 function closeResetModal() {
-    document.getElementById('modal-reset-data').classList.remove('active');
+    document.getElementById('modal-reset-data').classList.add('hidden');
 }
 
 async function confirmReset() {
