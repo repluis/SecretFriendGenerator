@@ -1,5 +1,5 @@
 @props(['class' => ''])
 
-<div class="summary-card {{ $class }}" {{ $attributes }}>
+<div class="card {{ $class }}" {{ $attributes }}>
     {{ $slot }}
 </div>

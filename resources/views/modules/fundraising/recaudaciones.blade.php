@@ -2,451 +2,484 @@
 
 @section('title', 'Recaudaciones - ' . ucfirst($type))
 
-@section('styles')
-<style>
-    .page-header { margin-bottom: 2.5rem; }
-    .page-header h1 { font-size: 2rem; font-weight: 700; margin-bottom: 0.25rem; }
-    .page-header p { color: #64748b; margin-bottom: 1rem; }
-    .page-header-row { display: flex; flex-direction: column; gap: 0; }
-    .btn-reset-data {
-        display: inline-flex; align-items: center; gap: 0.4rem;
-        background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5;
-        padding: 0.45rem 1rem; border-radius: 0.5rem; font-size: 0.85rem;
-        font-weight: 600; cursor: pointer; white-space: nowrap; transition: background .15s;
-    }
-    .btn-reset-data:hover:not(:disabled) { background: #fca5a5; }
-    .btn-reset-data:disabled {
-        background: #f1f5f9;
-        color: #cbd5e1;
-        border-color: #e2e8f0;
-        cursor: not-allowed;
-        opacity: 0.6;
-    }
-    .btn-copy-resumen {
-        display: inline-flex; align-items: center; gap: 0.4rem;
-        background: #dcfce7; color: #166534; border: 1px solid #86efac;
-        padding: 0.45rem 1rem; border-radius: 0.5rem; font-size: 0.85rem;
-        font-weight: 600; cursor: pointer; white-space: nowrap; transition: background .15s;
-    }
-    .btn-copy-resumen:hover { background: #bbf7d0; }
-    .btn-copy-resumen.copied { background: #166534; color: #fff; border-color: #166534; }
-    .btn-run-fundraising {
-        display: inline-flex; align-items: center; gap: 0.4rem;
-        background: #ede9fe; color: #4f46e5; border: 1px solid #c4b5fd;
-        padding: 0.45rem 1rem; border-radius: 0.5rem; font-size: 0.85rem;
-        font-weight: 600; cursor: pointer; white-space: nowrap; transition: background .15s;
-    }
-    .btn-run-fundraising:hover:not(:disabled) { background: #ddd6fe; }
-    .btn-run-fundraising:disabled { 
-        opacity: 0.6; 
-        cursor: not-allowed;
-        background: #f1f5f9;
-        color: #cbd5e1;
-        border-color: #e2e8f0;
-    }
-    .header-actions { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; }
-    .modal-warning { color: #7f1d1d; font-size: 0.9rem; margin: 0.5rem 0 1.25rem; line-height: 1.5; }
-    .modal-warning strong { display: block; font-size: 1rem; margin-bottom: 0.35rem; }
-    .modal-actions { display: flex; gap: 0.75rem; justify-content: flex-end; }
-</style>
-@endsection
-
 @section('content')
-    <div class="page-header">
-        <div class="page-header-row">
-            <h1>Recaudaciones &mdash; {{ ucfirst($type) }}</h1>
-            <p>Control de cobros mensuales. Cada 15 se cobra $1.00, mora diaria de $0.05 por atraso.</p>
-            <div class="header-actions">
-                <button 
-                    class="btn-run-fundraising" 
-                    id="btn-run-fundraising" 
-                    onclick="runFundraisingManual()"
-                    {{ Auth::user()->isAdmin() ? '' : 'disabled' }}
-                    title="{{ Auth::user()->isAdmin() ? 'Ejecutar cobro manual' : 'Solo administradores pueden ejecutar cobros' }}"
-                >
-                    &#9654; Ejecutar cobro manual
-                </button>
-                <button class="btn-copy-resumen" id="btn-copy-resumen" onclick="copyResumen()">
-                    &#128203; Copiar resumen
-                </button>
-                <button 
-                    class="btn-reset-data" 
-                    onclick="openResetModal()"
-                    {{ Auth::user()->isAdmin() ? '' : 'disabled' }}
-                    title="{{ Auth::user()->isAdmin() ? 'Eliminar todos los datos' : 'Solo administradores pueden eliminar datos' }}"
-                >
-                    &#9888; Eliminar todos los datos
-                </button>
-            </div>
-        </div>
+    <x-page-header 
+        title="💰 Recaudaciones - {{ ucfirst($type) }}" 
+        subtitle="Control de cobros mensuales. Cada 15 se cobra $1.00, mora diaria de $0.05 por atraso"
+    />
+
+    <!-- Action Buttons -->
+    <div style="display: flex; gap: var(--spacing-sm); margin-bottom: var(--spacing-xl); flex-wrap: wrap;">
+        <x-button 
+            variant="{{ Auth::user()->isAdmin() ? 'primary' : 'secondary' }}"
+            icon="▶️"
+            onclick="runFundraisingManual()"
+            :disabled="!Auth::user()->isAdmin()"
+        >
+            Ejecutar cobro manual
+        </x-button>
+
+        <x-button 
+            variant="success"
+            icon="📋"
+            onclick="copyResumen()"
+            id="btn-copy-resumen"
+        >
+            Copiar resumen
+        </x-button>
+
+        <x-button 
+            variant="{{ Auth::user()->isAdmin() ? 'danger' : 'secondary' }}"
+            icon="⚠️"
+            onclick="openResetModal()"
+            :disabled="!Auth::user()->isAdmin()"
+        >
+            Eliminar todos los datos
+        </x-button>
     </div>
 
-    {{-- Modal de confirmación para reset --}}
-    <x-modal id="modal-reset-data" title="Confirmar eliminacion de datos">
-        <p class="modal-warning">
-            <strong>Esta accion es irreversible.</strong>
-            Se eliminar&aacute;n <strong>todos</strong> los usuarios, transacciones y cobros registrados.
-            &iquest;Est&aacute;s seguro de continuar?
-        </p>
-        <div class="modal-actions">
-            <x-form.button variant="cancel" type="button" onclick="closeResetModal()">
-                Cancelar
-            </x-form.button>
-            <x-form.button variant="danger" type="button" onclick="confirmReset()">
-                S&iacute;, eliminar todo
-            </x-form.button>
-        </div>
-    </x-modal>
+    <!-- Stats Grid -->
+    <div class="stats-grid">
+        <x-stat-card-modern 
+            icon="💵"
+            value="${{ number_format($totalFromTransactions, 2) }}"
+            label="Total Recaudado"
+            color="success"
+            footer="Desde transacciones activas"
+        />
 
-    <div class="summary-grid">
-        <div class="summary-card">
-            <div class="label">Total Recaudado</div>
-            <div class="value green">${{ number_format($totalFromTransactions, 2) }}</div>
-            <div class="detail">Calculado desde transacciones activas</div>
-        </div>
-        <div class="summary-card">
-            <div class="label">Total Adeudado</div>
-            <div class="value blue">${{ number_format($summary['total_owed'], 2) }}</div>
-            <div class="detail">Base + moras acumuladas</div>
-        </div>
-        <div class="summary-card">
-            <div class="label">Pendiente</div>
-            <div class="value amber">${{ number_format($summary['total_pending'], 2) }}</div>
-            <div class="detail">{{ $summary['users_with_debt'] }} persona(s) con deuda</div>
-        </div>
-        <div class="summary-card">
-            <div class="label">Moras Acumuladas</div>
-            <div class="value red">${{ number_format($summary['total_penalties'], 2) }}</div>
-            <div class="detail">$0.05 diarios por atraso</div>
-        </div>
+        <x-stat-card-modern 
+            icon="📊"
+            value="${{ number_format($summary['total_owed'], 2) }}"
+            label="Total Adeudado"
+            color="primary"
+            footer="Base + moras acumuladas"
+        />
+
+        <x-stat-card-modern 
+            icon="⏳"
+            value="${{ number_format($summary['total_pending'], 2) }}"
+            label="Pendiente"
+            color="warning"
+            footer="{{ $summary['users_with_debt'] }} persona(s) con deuda"
+        />
+
+        <x-stat-card-modern 
+            icon="⚠️"
+            value="${{ number_format($summary['total_penalties'], 2) }}"
+            label="Moras Acumuladas"
+            color="danger"
+            footer="$0.05 diarios por atraso"
+        />
     </div>
 
+    <!-- Progress Bar -->
     @if($summary['total_owed'] > 0)
-    <div class="progress-section">
-        <div class="progress-header">
-            <h3>Progreso de la recaudaci&oacute;n</h3>
-            <span>{{ $summary['progress'] }}%</span>
-        </div>
-        <div class="progress-bar-bg">
-            <div class="progress-bar-fill" style="width: {{ $summary['progress'] }}%;"></div>
+    <div class="card" style="margin-bottom: var(--spacing-xl);">
+        <div class="card-body">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--spacing-md);">
+                <h3 style="font-size: 1rem; font-weight: 600; color: var(--color-slate-900);">Progreso de la recaudación</h3>
+                <span style="font-size: 1.25rem; font-weight: 700; color: var(--color-primary-600);">{{ $summary['progress'] }}%</span>
+            </div>
+            <div style="background: var(--color-slate-200); border-radius: var(--radius-full); height: 12px; overflow: hidden;">
+                <div style="background: linear-gradient(90deg, var(--color-primary-500), var(--color-primary-600)); height: 100%; border-radius: var(--radius-full); width: {{ $summary['progress'] }}%; transition: width 0.5s ease;"></div>
+            </div>
         </div>
     </div>
     @endif
 
-    <x-table.table :headers="['ID', 'Participante', 'Debe', 'Pagado', 'Mora', 'Saldo', 'Estado', 'Acci&oacute;n']" title="Detalle por participante">
-        @forelse($users as $user)
-        @php
-            $txBalance = $userTransactionBalances[$user['user_id']] ?? 0;
-            $saldo = $user['total_owed'] - $txBalance;
-        @endphp
-        <tr>
-            <td style="color: #94a3b8; font-size: 0.82rem;">{{ $user['user_id'] }}</td>
-            <td>
-                <x-avatar :name="$user['user_name']" />
-                {{ $user['user_name'] }}
-            </td>
-            <td>${{ number_format($user['total_owed'], 2) }}</td>
-            <td>${{ number_format($txBalance, 2) }}</td>
-            <td>
-                @if($user['total_penalty'] > 0)
-                    <span style="color: #dc2626;">${{ number_format($user['total_penalty'], 2) }}</span>
-                @else
-                    <span style="color: #94a3b8;">$0.00</span>
-                @endif
-            </td>
-            <td>
-                <span class="amount-main">${{ number_format($saldo, 2) }}</span>
-            </td>
-            <td>
-                @if($saldo <= 0)
-                    <x-badge color="green">Al d&iacute;a</x-badge>
-                @elseif($txBalance > 0)
-                    <x-badge color="amber">Parcial</x-badge>
-                @else
-                    <x-badge color="red">Pendiente</x-badge>
-                @endif
-            </td>
-            <td>
-                <div class="pay-form">
-                    <input 
-                        type="number" 
-                        step="0.01" 
-                        min="0.01" 
-                        placeholder="0.00" 
-                        id="pay-amount-{{ $user['user_id'] }}"
-                        {{ Auth::user()->isAdmin() ? '' : 'disabled' }}
-                    >
-                    <button 
-                        class="btn-pay" 
-                        onclick="createPayment({{ $user['user_id'] }}, '{{ addslashes($user['user_name']) }}')"
-                        {{ Auth::user()->isAdmin() ? '' : 'disabled' }}
-                        title="{{ Auth::user()->isAdmin() ? 'Registrar pago' : 'Solo administradores pueden registrar pagos' }}"
-                    >
-                        Pagar
-                    </button>
-                    <a
-                        href="{{ route('fundraising.cargos-usuario', ['userId' => $user['user_id'], 'type' => $type]) }}"
-                        class="btn-toggle inactive"
-                        title="Ver cargos detallados"
-                    >
-                        Cargos
-                    </a>
-                </div>
-            </td>
-        </tr>
-        @empty
-        <tr>
-            <td colspan="8">
-                <x-empty-state message="No hay cobros registrados para el tipo &quot;{{ $type }}&quot;." submessage="Los cobros se generan autom&aacute;ticamente cada 15 del mes." />
-            </td>
-        </tr>
-        @endforelse
-    </x-table.table>
+    <!-- Tabla de Participantes -->
+    <x-table-container title="💳 Detalle por Participante">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Participante</th>
+                    <th>Debe</th>
+                    <th>Pagado</th>
+                    <th>Mora</th>
+                    <th>Saldo</th>
+                    <th>Estado</th>
+                    <th>Acción</th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse($users as $user)
+                    @php
+                        $txBalance = $userTransactionBalances[$user['user_id']] ?? 0;
+                        $saldo = $user['total_owed'] - $txBalance;
+                    @endphp
+                    <tr>
+                        <td class="text-muted text-sm">{{ $user['user_id'] }}</td>
+                        <td>
+                            <div class="table-cell-user">
+                                <x-avatar :name="$user['user_name']" size="md" />
+                                <span class="table-user-name">{{ $user['user_name'] }}</span>
+                            </div>
+                        </td>
+                        <td class="font-semibold">${{ number_format($user['total_owed'], 2) }}</td>
+                        <td>
+                            <span class="font-semibold" style="color: var(--color-success-600);">
+                                ${{ number_format($txBalance, 2) }}
+                            </span>
+                        </td>
+                        <td>
+                            @if($user['total_penalty'] > 0)
+                                <span class="font-semibold" style="color: var(--color-danger-600);">
+                                    ${{ number_format($user['total_penalty'], 2) }}
+                                </span>
+                            @else
+                                <span class="text-muted">$0.00</span>
+                            @endif
+                        </td>
+                        <td>
+                            <span class="font-bold" style="color: {{ $saldo <= 0 ? 'var(--color-success-600)' : 'var(--color-warning-600)' }};">
+                                ${{ number_format($saldo, 2) }}
+                            </span>
+                        </td>
+                        <td>
+                            @if($saldo <= 0)
+                                <x-badge color="success">✅ Al día</x-badge>
+                            @elseif($txBalance > 0)
+                                <x-badge color="warning">⏳ Parcial</x-badge>
+                            @else
+                                <x-badge color="danger">❌ Pendiente</x-badge>
+                            @endif
+                        </td>
+                        <td>
+                            <div style="display: flex; gap: var(--spacing-xs); align-items: center;">
+                                <input 
+                                    type="number" 
+                                    step="0.01" 
+                                    min="0.01" 
+                                    placeholder="0.00" 
+                                    id="pay-amount-{{ $user['user_id'] }}"
+                                    class="form-input"
+                                    style="width: 90px; padding: 0.375rem 0.5rem; font-size: 0.875rem;"
+                                    {{ Auth::user()->isAdmin() ? '' : 'disabled' }}
+                                >
+                                <x-button 
+                                    variant="{{ Auth::user()->isAdmin() ? 'primary' : 'secondary' }}"
+                                    size="sm"
+                                    onclick="createPayment({{ $user['user_id'] }}, '{{ addslashes($user['user_name']) }}')"
+                                    :disabled="!Auth::user()->isAdmin()"
+                                >
+                                    Pagar
+                                </x-button>
+                                <a href="{{ route('fundraising.cargos-usuario', ['userId' => $user['user_id'], 'type' => $type]) }}" class="btn btn-ghost-primary btn-sm">
+                                    Ver Cargos
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                @empty
+                    <tr>
+                        <td colspan="8">
+                            <div class="empty-state">
+                                <div class="empty-state-icon">💳</div>
+                                <p class="empty-state-text">No hay cobros registrados para el tipo "{{ $type }}".</p>
+                            </div>
+                        </td>
+                    </tr>
+                @endforelse
+            </tbody>
+        </table>
+    </x-table-container>
 
-    <!-- Transactions Table -->
-    <x-table.table :headers="['Usuario', 'Tipo', 'Monto', 'Descripci&oacute;n', 'Estado', 'Fecha', 'Acci&oacute;n']" title="Transacciones">
-        @forelse($transactions as $tx)
-        <tr id="tx-row-{{ $tx->id }}">
-            <td>
-                <x-avatar :name="$tx->user->name ?? '??'" />
-                {{ $tx->user->name ?? 'N/A' }}
-            </td>
-            <td>
-                @if($tx->type === 'credit')
-                    <x-badge color="green">Cr&eacute;dito</x-badge>
-                @else
-                    <x-badge color="red">D&eacute;bito</x-badge>
-                @endif
-            </td>
-            <td>
-                <span style="font-weight: 600; color: {{ $tx->type === 'credit' ? '#16a34a' : '#dc2626' }};">
-                    {{ $tx->type === 'credit' ? '+' : '-' }}${{ number_format($tx->amount, 2) }}
-                </span>
-            </td>
-            <td>{{ $tx->description ?? '&mdash;' }}</td>
-            <td>
-                <x-badge :color="$tx->active ? 'green' : 'slate'">{{ $tx->active ? 'Activa' : 'Inactiva' }}</x-badge>
-            </td>
-            <td style="font-size: 0.82rem; color: #64748b;">
-                {{ $tx->created_at->format('d/m/Y H:i') }}
-            </td>
-            <td>
-                <button
-                    class="btn-toggle {{ $tx->active ? 'active' : 'inactive' }}"
-                    onclick="toggleTransaction({{ $tx->id }})"
-                    {{ Auth::user()->isAdmin() ? '' : 'disabled' }}
-                    title="{{ Auth::user()->isAdmin() ? ($tx->active ? 'Desactivar transacción' : 'Activar transacción') : 'Solo administradores pueden modificar transacciones' }}"
-                >
-                    {{ $tx->active ? 'Desactivar' : 'Activar' }}
-                </button>
-            </td>
-        </tr>
-        @empty
-        <tr>
-            <td colspan="7">
-                <x-empty-state message="No hay transacciones registradas." />
-            </td>
-        </tr>
-        @endforelse
-    </x-table.table>
+    <!-- Tabla de Transacciones -->
+    <x-table-container title="📝 Transacciones">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Usuario</th>
+                    <th>Tipo</th>
+                    <th>Monto</th>
+                    <th>Descripción</th>
+                    <th>Estado</th>
+                    <th>Fecha</th>
+                    <th>Acción</th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse($transactions as $tx)
+                    <tr id="tx-row-{{ $tx->id }}">
+                        <td>
+                            <div class="table-cell-user">
+                                <x-avatar :name="$tx->user->name ?? '??'" size="sm" />
+                                <span class="table-user-name">{{ $tx->user->name ?? 'N/A' }}</span>
+                            </div>
+                        </td>
+                        <td>
+                            <x-badge :color="$tx->type === 'credit' ? 'success' : 'danger'">
+                                {{ $tx->type === 'credit' ? '💰 Crédito' : '💸 Débito' }}
+                            </x-badge>
+                        </td>
+                        <td>
+                            <span class="font-semibold" style="color: {{ $tx->type === 'credit' ? 'var(--color-success-600)' : 'var(--color-danger-600)' }};">
+                                {{ $tx->type === 'credit' ? '+' : '-' }}${{ number_format($tx->amount, 2) }}
+                            </span>
+                        </td>
+                        <td class="text-sm">{{ $tx->description ?? '—' }}</td>
+                        <td>
+                            <x-badge :color="$tx->active ? 'success' : 'slate'">
+                                {{ $tx->active ? '✅ Activa' : '⏸️ Inactiva' }}
+                            </x-badge>
+                        </td>
+                        <td class="text-sm text-muted">
+                            {{ $tx->created_at->format('d/m/Y H:i') }}
+                        </td>
+                        <td>
+                            <x-button 
+                                :variant="$tx->active ? 'ghost-danger' : 'ghost-success'"
+                                size="sm"
+                                onclick="toggleTransaction({{ $tx->id }})"
+                                :disabled="!Auth::user()->isAdmin()"
+                            >
+                                {{ $tx->active ? 'Desactivar' : 'Activar' }}
+                            </x-button>
+                        </td>
+                    </tr>
+                @empty
+                    <tr>
+                        <td colspan="7">
+                            <div class="empty-state">
+                                <div class="empty-state-icon">📝</div>
+                                <p class="empty-state-text">No hay transacciones registradas.</p>
+                            </div>
+                        </td>
+                    </tr>
+                @endforelse
+            </tbody>
+        </table>
+    </x-table-container>
+
+    <!-- Modal de Confirmación -->
+    <div class="modal-overlay" id="modal-reset-data">
+        <div class="modal">
+            <div class="modal-header">⚠️ Confirmar Eliminación de Datos</div>
+            <div class="modal-body">
+                <p style="color: var(--color-danger-700); margin-bottom: var(--spacing-md);">
+                    <strong style="display: block; font-size: 1rem; margin-bottom: var(--spacing-xs);">Esta acción es irreversible.</strong>
+                    Se eliminarán <strong>todos</strong> los usuarios, transacciones y cobros registrados.
+                    ¿Estás seguro de continuar?
+                </p>
+            </div>
+            <div class="modal-footer">
+                <x-button variant="secondary" onclick="closeResetModal()">
+                    Cancelar
+                </x-button>
+                <x-button variant="danger" onclick="confirmReset()">
+                    Sí, eliminar todo
+                </x-button>
+            </div>
+        </div>
+    </div>
+
+    <x-toast />
 @endsection
 
 @section('scripts')
 <script>
-    const resumenData = {
-        totalRecaudado: {{ $totalFromTransactions }},
-        totalPendiente: {{ $summary['total_pending'] }},
-        users: [
-            @foreach($users as $user)
-            @php
-                $txBal = $userTransactionBalances[$user['user_id']] ?? 0;
-                $saldoUser = $user['total_owed'] - $txBal;
-            @endphp
-            {
-                name: @json($user['user_name']),
-                pago: {{ $txBal }},
-                debe: {{ max(0, $saldoUser) }}
-            },
-            @endforeach
-        ]
-    };
+const resumenData = {
+    totalRecaudado: {{ $totalFromTransactions }},
+    totalPendiente: {{ $summary['total_pending'] }},
+    users: [
+        @foreach($users as $user)
+        @php
+            $txBal = $userTransactionBalances[$user['user_id']] ?? 0;
+            $saldoUser = $user['total_owed'] - $txBal;
+        @endphp
+        {
+            name: @json($user['user_name']),
+            pago: {{ $txBal }},
+            debe: {{ max(0, $saldoUser) }}
+        },
+        @endforeach
+    ]
+};
 
-    function fmt(n) {
-        return '$' + parseFloat(n).toFixed(2);
-    }
+function fmt(n) {
+    return '$' + parseFloat(n).toFixed(2);
+}
 
-    function copyResumen() {
-        const morosos = resumenData.users
-            .filter(u => u.debe > 0)
-            .sort((a, b) => b.debe - a.debe);
+function copyResumen() {
+    const morosos = resumenData.users
+        .filter(u => u.debe > 0)
+        .sort((a, b) => b.debe - a.debe);
 
-        const pagaron = resumenData.users
-            .filter(u => u.debe <= 0)
-            .sort((a, b) => a.name.localeCompare(b.name));
+    const pagaron = resumenData.users
+        .filter(u => u.debe <= 0)
+        .sort((a, b) => a.name.localeCompare(b.name));
 
-        const today = new Date().toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
-        const sep = '━━━━━━━━━━━━━━━━━━━━';
+    const today = new Date().toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    const sep = '━━━━━━━━━━━━━━━━━━━━';
 
-        let lines = [];
-        lines.push('📊 *Resumen de Recaudaciones*');
-        lines.push('_' + today + '_');
+    let lines = [];
+    lines.push('📊 *Resumen de Recaudaciones*');
+    lines.push('_' + today + '_');
+    lines.push('');
+    lines.push('💰 *Total Recaudado:* ' + fmt(resumenData.totalRecaudado));
+    lines.push('⏳ *Pendiente:* ' + fmt(resumenData.totalPendiente));
+
+    if (morosos.length > 0) {
         lines.push('');
-        lines.push('💰 *Total Recaudado:* ' + fmt(resumenData.totalRecaudado));
-        lines.push('⏳ *Pendiente:* ' + fmt(resumenData.totalPendiente));
-
-        if (morosos.length > 0) {
-            lines.push('');
-            lines.push(sep);
-            lines.push('🔴 *MOROSOS*');
-            lines.push(sep);
-            morosos.forEach(u => {
-                lines.push('• ' + u.name + ' → pagó ' + fmt(u.pago) + ' | debe ' + fmt(u.debe));
-            });
-        }
-
-        if (pagaron.length > 0) {
-            lines.push('');
-            lines.push(sep);
-            lines.push('✅ *YA PAGARON*');
-            lines.push(sep);
-            pagaron.forEach(u => {
-                lines.push('• ' + u.name + ' → pagó ' + fmt(u.pago) + ' ✔');
-            });
-        }
-
-        const text = lines.join('\n');
-
-        navigator.clipboard.writeText(text).then(() => {
-            const btn = document.getElementById('btn-copy-resumen');
-            btn.textContent = '✔ Copiado!';
-            btn.classList.add('copied');
-            setTimeout(() => {
-                btn.innerHTML = '&#128203; Copiar resumen';
-                btn.classList.remove('copied');
-            }, 2000);
-        }).catch(() => {
-            alert('No se pudo copiar al portapapeles. Intenta desde un navegador moderno.');
+        lines.push(sep);
+        lines.push('🔴 *MOROSOS*');
+        lines.push(sep);
+        morosos.forEach(u => {
+            lines.push('• ' + u.name + ' → pagó ' + fmt(u.pago) + ' | debe ' + fmt(u.debe));
         });
     }
 
-    function openResetModal() {
-        document.getElementById('modal-reset-data').classList.add('open');
+    if (pagaron.length > 0) {
+        lines.push('');
+        lines.push(sep);
+        lines.push('✅ *YA PAGARON*');
+        lines.push(sep);
+        pagaron.forEach(u => {
+            lines.push('• ' + u.name + ' → pagó ' + fmt(u.pago) + ' ✔');
+        });
     }
 
-    function closeResetModal() {
-        document.getElementById('modal-reset-data').classList.remove('open');
-    }
+    const text = lines.join('\n');
 
-    async function confirmReset() {
-        try {
-            const response = await fetch('/api/fundraising/reset-data', {
-                method: 'DELETE',
-                headers: {
-                    'Accept': 'application/json',
-                    'X-CSRF-TOKEN': csrfToken
-                }
-            });
+    navigator.clipboard.writeText(text).then(() => {
+        const btn = document.getElementById('btn-copy-resumen');
+        const originalHTML = btn.innerHTML;
+        btn.innerHTML = '✅ Copiado!';
+        btn.style.background = 'var(--color-success-600)';
+        setTimeout(() => {
+            btn.innerHTML = originalHTML;
+            btn.style.background = '';
+        }, 2000);
+    }).catch(() => {
+        showToast('No se pudo copiar al portapapeles', 'error');
+    });
+}
 
-            const data = await response.json();
+function openResetModal() {
+    document.getElementById('modal-reset-data').classList.add('active');
+}
 
-            if (data.success) {
-                closeResetModal();
-                location.reload();
-            } else {
-                alert('Error: ' + (data.message || 'No se pudo eliminar los datos'));
+function closeResetModal() {
+    document.getElementById('modal-reset-data').classList.remove('active');
+}
+
+async function confirmReset() {
+    try {
+        const response = await fetch('/api/fundraising/reset-data', {
+            method: 'DELETE',
+            headers: {
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': csrfToken
             }
-        } catch (error) {
-            console.error('Error:', error);
-            alert('Error al eliminar los datos');
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            closeResetModal();
+            showToast('Datos eliminados correctamente', 'success');
+            setTimeout(() => location.reload(), 1500);
+        } else {
+            showToast(data.message || 'Error al eliminar los datos', 'error');
         }
+    } catch (error) {
+        console.error('Error:', error);
+        showToast('Error de conexión', 'error');
+    }
+}
+
+async function createPayment(userId, userName) {
+    const input = document.getElementById('pay-amount-' + userId);
+    const amount = parseFloat(input.value);
+
+    if (!amount || amount <= 0) {
+        showToast('Ingrese un monto válido', 'error');
+        return;
     }
 
-    async function createPayment(userId, userName) {
-        const input = document.getElementById('pay-amount-' + userId);
-        const amount = parseFloat(input.value);
+    const confirmed = confirm(
+        '¿Confirmar pago?\n\n' +
+        'Participante: ' + userName + '\n' +
+        'Monto: $' + amount.toFixed(2)
+    );
+    if (!confirmed) return;
 
-        if (!amount || amount <= 0) {
-            alert('Ingrese un monto valido');
-            return;
+    try {
+        const response = await fetch('/api/transactions', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': csrfToken
+            },
+            body: JSON.stringify({
+                user_id: userId,
+                type: 'credit',
+                amount: amount,
+                description: 'Pago manual - ' + userName
+            })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            showToast('Pago registrado correctamente', 'success');
+            setTimeout(() => location.reload(), 1500);
+        } else {
+            showToast(data.message || 'Error al registrar el pago', 'error');
         }
+    } catch (error) {
+        console.error('Error:', error);
+        showToast('Error de conexión', 'error');
+    }
+}
 
-        const confirmed = confirm(
-            '¿Confirmar pago?\n\n' +
-            'Participante: ' + userName + '\n' +
-            'Monto: $' + amount.toFixed(2)
-        );
-        if (!confirmed) return;
+async function runFundraisingManual() {
+    if (!confirm('Esto creará cobros para la fecha de hoy y aplicará multas pendientes. ¿Continuar?')) return;
+    
+    try {
+        const response = await fetch('/api/fundraising/run-manual', {
+            method: 'POST',
+            headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': csrfToken }
+        });
+        const data = await response.json();
+        
+        if (data.success) {
+            showToast(data.message, 'success');
+            setTimeout(() => location.reload(), 1500);
+        } else {
+            showToast(data.message || 'Error al ejecutar', 'error');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showToast('Error de conexión', 'error');
+    }
+}
 
-        try {
-            const response = await fetch('/api/transactions', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json',
-                    'X-CSRF-TOKEN': csrfToken
-                },
-                body: JSON.stringify({
-                    user_id: userId,
-                    type: 'credit',
-                    amount: amount,
-                    description: 'Pago manual - ' + userName
-                })
-            });
-
-            const data = await response.json();
-
-            if (data.success) {
-                location.reload();
-            } else {
-                alert('Error: ' + (data.message || 'No se pudo registrar el pago'));
+async function toggleTransaction(id) {
+    try {
+        const response = await fetch('/api/transactions/' + id + '/toggle-active', {
+            method: 'PATCH',
+            headers: {
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': csrfToken
             }
-        } catch (error) {
-            console.error('Error:', error);
-            alert('Error al registrar el pago');
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            showToast('Estado actualizado correctamente', 'success');
+            setTimeout(() => location.reload(), 1500);
+        } else {
+            showToast(data.message || 'Error al cambiar el estado', 'error');
         }
+    } catch (error) {
+        console.error('Error:', error);
+        showToast('Error de conexión', 'error');
     }
-
-    async function runFundraisingManual() {
-        const btn = document.getElementById('btn-run-fundraising');
-        if (!confirm('Esto creará cobros para la fecha de hoy y aplicará multas pendientes. ¿Continuar?')) return;
-        btn.disabled = true; btn.textContent = 'Ejecutando...';
-        try {
-            const response = await fetch('/api/fundraising/run-manual', {
-                method: 'POST',
-                headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': csrfToken }
-            });
-            const data = await response.json();
-            if (data.success) { alert(data.message); location.reload(); }
-            else { alert('Error: ' + (data.message || 'No se pudo ejecutar')); }
-        } catch (error) {
-            console.error('Error:', error);
-            alert('Error al ejecutar el cobro manual');
-        } finally {
-            btn.disabled = false; btn.innerHTML = '&#9654; Ejecutar cobro manual';
-        }
-    }
-
-    async function toggleTransaction(id) {
-        try {
-            const response = await fetch('/api/transactions/' + id + '/toggle-active', {
-                method: 'PATCH',
-                headers: {
-                    'Accept': 'application/json',
-                    'X-CSRF-TOKEN': csrfToken
-                }
-            });
-
-            const data = await response.json();
-
-            if (data.success) {
-                location.reload();
-            } else {
-                alert('Error: ' + (data.message || 'No se pudo cambiar el estado'));
-            }
-        } catch (error) {
-            console.error('Error:', error);
-            alert('Error al cambiar el estado de la transaccion');
-        }
-    }
+}
 </script>
 @endsection

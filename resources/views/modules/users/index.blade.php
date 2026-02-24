@@ -2,303 +2,360 @@
 
 @section('title', 'Usuarios')
 
-@section('styles')
-<style>
-    .page-header {
-        margin-bottom: 2rem;
-    }
-    .page-header h1 {
-        font-size: 1.5rem;
-        font-weight: 700;
-        color: #1e293b;
-    }
-    .page-header p {
-        color: #64748b;
-        font-size: 0.9rem;
-        margin-top: 0.25rem;
-    }
-
-    .users-table-card {
-        background: white;
-        border-radius: 12px;
-        border: 1px solid #e2e8f0;
-        overflow: hidden;
-        box-shadow: 0 1px 4px rgba(0,0,0,0.04);
-    }
-
-    .users-table {
-        width: 100%;
-        border-collapse: collapse;
-    }
-
-    .users-table thead th {
-        text-align: left;
-        padding: 0.75rem 1.25rem;
-        font-size: 0.72rem;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-        color: #64748b;
-        background: #f8fafc;
-        border-bottom: 1px solid #e2e8f0;
-    }
-
-    .users-table tbody td {
-        padding: 0.85rem 1.25rem;
-        font-size: 0.875rem;
-        border-bottom: 1px solid #f1f5f9;
-        vertical-align: middle;
-    }
-
-    .users-table tbody tr:last-child td {
-        border-bottom: none;
-    }
-
-    .users-table tbody tr:hover {
-        background: #fafbfe;
-    }
-
-    .user-name-cell {
-        display: flex;
-        align-items: center;
-        gap: 0.6rem;
-        font-weight: 500;
-    }
-
-    .avatar-circle {
-        width: 34px; height: 34px;
-        border-radius: 50%;
-        display: flex; align-items: center; justify-content: center;
-        font-size: 0.7rem; font-weight: 700;
-        color: white;
-        flex-shrink: 0;
-    }
-
-    /* Identification inline edit */
-    .id-display {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-    }
-
-    .id-value {
-        color: #334155;
-        font-weight: 500;
-        min-width: 80px;
-    }
-
-    .id-value.empty {
-        color: #94a3b8;
-        font-style: italic;
-    }
-
-    .id-edit-form {
-        display: none;
-        align-items: center;
-        gap: 0.4rem;
-    }
-
-    .id-input {
-        border: 1px solid #6366f1;
-        border-radius: 6px;
-        padding: 0.3rem 0.6rem;
-        font-size: 0.85rem;
-        font-family: inherit;
-        width: 130px;
-        outline: none;
-        color: #1e293b;
-    }
-
-    .btn-icon {
-        background: none;
-        border: none;
-        cursor: pointer;
-        padding: 0.3rem;
-        border-radius: 5px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        transition: background 0.15s;
-        font-size: 0.85rem;
-    }
-
-    .btn-icon:hover { background: #f1f5f9; }
-    .btn-icon.edit { color: #6366f1; }
-    .btn-icon.save { color: #16a34a; }
-    .btn-icon.cancel { color: #94a3b8; }
-
-    .btn-reset {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.35rem;
-        padding: 0.35rem 0.75rem;
-        background: #fff7ed;
-        border: 1px solid #fed7aa;
-        border-radius: 7px;
-        color: #c2410c;
-        font-size: 0.78rem;
-        font-weight: 600;
-        cursor: pointer;
-        font-family: inherit;
-        transition: all 0.15s;
-    }
-
-    .btn-reset:hover {
-        background: #ffedd5;
-        border-color: #fb923c;
-    }
-
-    .badge {
-        display: inline-flex;
-        align-items: center;
-        padding: 0.2rem 0.6rem;
-        border-radius: 9999px;
-        font-size: 0.72rem;
-        font-weight: 600;
-    }
-    .badge-active { background: #dcfce7; color: #15803d; }
-    .badge-inactive { background: #f1f5f9; color: #64748b; }
-    .badge-admin { 
-        background: linear-gradient(135deg, #fef3c7, #fde68a); 
-        color: #92400e; 
-        border: 1px solid #fbbf24;
-    }
-    .badge-finance {
-        background: linear-gradient(135deg, #d1fae5, #a7f3d0);
-        color: #065f46;
-        border: 1px solid #10b981;
-    }
-    .badge-user { 
-        background: #dbeafe; 
-        color: #1e40af; 
-        border: 1px solid #93c5fd;
-    }
-    .badge-empty { 
-        background: #f1f5f9; 
-        color: #94a3b8; 
-        font-style: italic;
-    }
-
-    .toast {
-        position: fixed;
-        bottom: 1.5rem;
-        right: 1.5rem;
-        padding: 0.75rem 1.25rem;
-        border-radius: 10px;
-        font-size: 0.875rem;
-        font-weight: 500;
-        color: white;
-        z-index: 9999;
-        opacity: 0;
-        transform: translateY(8px);
-        transition: all 0.25s;
-        pointer-events: none;
-    }
-    .toast.show { opacity: 1; transform: translateY(0); }
-    .toast.success { background: #16a34a; }
-    .toast.error { background: #dc2626; }
-</style>
-@endsection
-
 @section('content')
-    <div style="max-width: 900px; margin: 0 auto; padding: 2rem 1.5rem;">
-        <div class="page-header">
-            <h1>Usuarios</h1>
-            <p>Gestión de identificaciones y contraseñas de los usuarios del sistema.</p>
-        </div>
+    <x-page-header 
+        title="👥 Usuarios" 
+        subtitle="Gestión completa de usuarios del sistema"
+    />
 
-        <div class="users-table-card">
-            <table class="users-table">
-                <thead>
-                    <tr>
-                        <th>Nombre</th>
-                        <th>Identificación</th>
-                        <th>Rol</th>
-                        <th>Estado</th>
-                        <th>Acciones</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse($users as $user)
-                    @php
-                        $colors = ['#6366f1','#8b5cf6','#a855f7','#ec4899','#f43f5e','#f97316','#eab308','#22c55e','#14b8a6','#06b6d4'];
-                    @endphp
-                    <tr>
+    <x-table-container title="Lista de Usuarios ({{ $users->count() }})">
+        <x-slot name="actions">
+            @if(Auth::user()->isAdmin())
+                <x-button variant="primary" icon="➕" onclick="openCreateModal()">
+                    Nuevo usuario
+                </x-button>
+            @endif
+        </x-slot>
+
+        <table class="table">
+            <thead>
+                <tr>
+                    <th style="width: 25%;">Usuario</th>
+                    <th style="width: 18%;">Identificación</th>
+                    <th style="width: 17%;">Roles</th>
+                    <th style="width: 12%;">Estado</th>
+                    <th style="width: 28%;">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse($users as $user)
+                    <tr id="user-row-{{ $user->id }}">
                         <td>
-                            <div class="user-name-cell">
-                                <div class="avatar-circle" style="background: {{ $colors[$loop->index % count($colors)] }};">
-                                    {{ strtoupper(substr($user->name, 0, 2)) }}
+                            <div class="table-cell-user">
+                                <x-avatar :name="$user->name" size="md" />
+                                <div class="table-user-info">
+                                    <span class="table-user-name">{{ $user->name }}</span>
+                                    <span class="table-user-email">{{ $user->email }}</span>
                                 </div>
-                                {{ $user->name }}
                             </div>
                         </td>
                         <td>
-                            <div class="id-display" id="display-{{ $user->id }}">
-                                <span class="id-value {{ $user->identification ? '' : 'empty' }}" id="id-val-{{ $user->id }}">
+                            <div style="display: flex; align-items: center; gap: 0.5rem;" id="display-{{ $user->id }}">
+                                <span class="font-semibold" style="color: {{ $user->identification ? 'var(--color-slate-700)' : 'var(--color-slate-400)' }};" id="id-val-{{ $user->id }}">
                                     {{ $user->identification ?? 'Sin identificación' }}
                                 </span>
                                 @if(Auth::user()->isAdmin())
-                                    <button class="btn-icon edit" onclick="startEdit({{ $user->id }}, '{{ addslashes($user->identification ?? '') }}')" title="Editar">✏️</button>
+                                    <button 
+                                        class="btn-icon btn-ghost-primary" 
+                                        onclick="startEdit({{ $user->id }}, '{{ addslashes($user->identification ?? '') }}')" 
+                                        title="Editar identificación"
+                                    >
+                                        ✏️
+                                    </button>
                                 @endif
                             </div>
                             @if(Auth::user()->isAdmin())
-                                <div class="id-edit-form" id="edit-{{ $user->id }}">
-                                    <input type="text" class="id-input" id="input-{{ $user->id }}"
+                                <div style="display: none; align-items: center; gap: 0.5rem;" id="edit-{{ $user->id }}">
+                                    <input 
+                                        type="text" 
+                                        class="form-input" 
+                                        id="input-{{ $user->id }}"
                                         value="{{ $user->identification ?? '' }}"
                                         placeholder="Ej: CC-123456"
-                                        maxlength="100">
-                                    <button class="btn-icon save" onclick="saveIdentification({{ $user->id }})" title="Guardar">✅</button>
-                                    <button class="btn-icon cancel" onclick="cancelEdit({{ $user->id }}, '{{ addslashes($user->identification ?? '') }}')" title="Cancelar">✖️</button>
+                                        maxlength="100"
+                                    >
+                                    <button class="btn-icon btn-ghost-success" onclick="saveIdentification({{ $user->id }})" title="Guardar">✅</button>
+                                    <button class="btn-icon btn-ghost" onclick="cancelEdit({{ $user->id }}, '{{ addslashes($user->identification ?? '') }}')" title="Cancelar">✖️</button>
                                 </div>
                             @endif
                         </td>
                         <td>
-                            @if($user->roles->isNotEmpty())
-                                @foreach($user->roles as $role)
-                                    @if($role->name === 'admin')
-                                        <span class="badge badge-admin">👑 Administrador</span>
-                                    @elseif($role->name === 'finance')
-                                        <span class="badge badge-finance">💰 Finanzas</span>
+                            <div style="display: flex; flex-wrap: wrap; gap: 0.375rem;">
+                                @if($user->roles->isNotEmpty())
+                                    @foreach($user->roles as $role)
+                                        @if($role->name === 'admin')
+                                            <x-badge color="warning">👑 Admin</x-badge>
+                                        @elseif($role->name === 'finance')
+                                            <x-badge color="success">💰 Finance</x-badge>
+                                        @else
+                                            <x-badge color="primary">👤 User</x-badge>
+                                        @endif
+                                    @endforeach
+                                @else
+                                    <x-badge color="slate">Sin rol</x-badge>
+                                @endif
+                            </div>
+                        </td>
+                        <td>
+                            <x-badge :color="$user->active ? 'success' : 'slate'">
+                                {{ $user->active ? '✅ Activo' : '⏸️ Inactivo' }}
+                            </x-badge>
+                        </td>
+                        <td>
+                            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                                @if(Auth::user()->isAdmin())
+                                    <x-button 
+                                        variant="ghost-primary" 
+                                        size="sm"
+                                        icon="✏️"
+                                        onclick="openEditModal({{ $user->id }}, '{{ addslashes($user->name) }}')"
+                                    >
+                                        Editar
+                                    </x-button>
+                                    
+                                    @if($user->active)
+                                        <x-button 
+                                            variant="ghost-danger" 
+                                            size="sm"
+                                            onclick="toggleActive({{ $user->id }})"
+                                        >
+                                            Desactivar
+                                        </x-button>
                                     @else
-                                        <span class="badge badge-user">👤 Usuario</span>
+                                        <x-button 
+                                            variant="ghost-success" 
+                                            size="sm"
+                                            onclick="toggleActive({{ $user->id }})"
+                                        >
+                                            Activar
+                                        </x-button>
                                     @endif
-                                @endforeach
-                            @else
-                                <span class="badge badge-empty">Sin rol</span>
-                            @endif
-                        </td>
-                        <td>
-                            <span class="badge {{ $user->active ? 'badge-active' : 'badge-inactive' }}">
-                                {{ $user->active ? 'Activo' : 'Inactivo' }}
-                            </span>
-                        </td>
-                        <td>
-                            @if(Auth::user()->isAdmin())
-                                <button class="btn-reset" onclick="resetPassword({{ $user->id }}, '{{ addslashes($user->name) }}')">
-                                    🔑 Restablecer contraseña
-                                </button>
-                            @else
-                                <span style="color: #94a3b8; font-size: 0.85rem; font-style: italic;">Solo administradores</span>
-                            @endif
+                                    
+                                    <x-button 
+                                        variant="ghost-warning" 
+                                        size="sm"
+                                        icon="🔑"
+                                        onclick="resetPassword({{ $user->id }}, '{{ addslashes($user->name) }}')"
+                                    >
+                                        Restablecer
+                                    </x-button>
+                                @else
+                                    <span class="text-muted text-sm" style="font-style: italic;">Solo admin</span>
+                                @endif
+                            </div>
                         </td>
                     </tr>
-                    @empty
+                @empty
                     <tr>
-                        <td colspan="5" style="text-align: center; padding: 2.5rem; color: #94a3b8;">
-                            No hay usuarios registrados.
+                        <td colspan="5">
+                            <div class="empty-state">
+                                <div class="empty-state-icon">👥</div>
+                                <p class="empty-state-text">No hay usuarios registrados.</p>
+                            </div>
                         </td>
                     </tr>
-                    @endforelse
-                </tbody>
-            </table>
+                @endforelse
+            </tbody>
+        </table>
+    </x-table-container>
+
+    <!-- Modal para Crear/Editar Usuario -->
+    <div id="userModal" class="modal" style="display: none;">
+        <div class="modal-overlay" onclick="closeModal()"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="userModal-title">Nuevo usuario</h3>
+                <button class="modal-close" onclick="closeModal()">✕</button>
+            </div>
+            <form id="userForm" onsubmit="handleSubmit(event)">
+                <div class="modal-body">
+                    <input type="hidden" id="userId" value="">
+                    <div style="margin-bottom: var(--spacing-md);">
+                        <label for="userName" style="display: block; margin-bottom: var(--spacing-xs); font-weight: 500; font-size: 0.875rem;">Nombre *</label>
+                        <input type="text" id="userName" class="form-input" placeholder="Nombre completo" required>
+                    </div>
+                    <div id="emailGroup" style="margin-bottom: var(--spacing-md);">
+                        <label for="userEmail" style="display: block; margin-bottom: var(--spacing-xs); font-weight: 500; font-size: 0.875rem;">Email (opcional)</label>
+                        <input type="email" id="userEmail" class="form-input" placeholder="correo@ejemplo.com">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <x-button variant="secondary" type="button" onclick="closeModal()">Cancelar</x-button>
+                    <x-button variant="primary" type="submit" id="saveBtn">Guardar</x-button>
+                </div>
+            </form>
         </div>
     </div>
 
-    <div class="toast" id="toast"></div>
+    <x-toast />
+@endsection
+
+@section('styles')
+<style>
+    .modal {
+        position: fixed;
+        inset: 0;
+        z-index: 1000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .modal-overlay {
+        position: absolute;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.5);
+    }
+
+    .modal-content {
+        position: relative;
+        background: white;
+        border-radius: var(--radius-lg);
+        width: 90%;
+        max-width: 500px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    }
+
+    .modal-header {
+        padding: var(--spacing-lg) var(--spacing-xl);
+        border-bottom: 1px solid var(--color-slate-200);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .modal-header h3 {
+        font-size: 1.125rem;
+        font-weight: 600;
+        margin: 0;
+    }
+
+    .modal-close {
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        color: var(--color-slate-400);
+        cursor: pointer;
+        padding: 0;
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: var(--radius-md);
+        transition: all var(--transition-fast);
+    }
+
+    .modal-close:hover {
+        background: var(--color-slate-100);
+        color: var(--color-slate-600);
+    }
+
+    .modal-body {
+        padding: var(--spacing-xl);
+    }
+
+    .modal-footer {
+        padding: var(--spacing-lg) var(--spacing-xl);
+        border-top: 1px solid var(--color-slate-200);
+        display: flex;
+        justify-content: flex-end;
+        gap: var(--spacing-sm);
+    }
+</style>
 @endsection
 
 @section('scripts')
 <script>
+function openCreateModal() {
+    document.getElementById('userModal-title').textContent = 'Nuevo usuario';
+    document.getElementById('userId').value = '';
+    document.getElementById('userName').value = '';
+    document.getElementById('userEmail').value = '';
+    document.getElementById('emailGroup').style.display = 'block';
+    document.getElementById('userModal').style.display = 'flex';
+    document.getElementById('userName').focus();
+}
+
+function openEditModal(id, name) {
+    document.getElementById('userModal-title').textContent = 'Editar usuario';
+    document.getElementById('userId').value = id;
+    document.getElementById('userName').value = name;
+    document.getElementById('emailGroup').style.display = 'none';
+    document.getElementById('userModal').style.display = 'flex';
+    document.getElementById('userName').focus();
+}
+
+function closeModal() {
+    document.getElementById('userModal').style.display = 'none';
+}
+
+async function handleSubmit(e) {
+    e.preventDefault();
+    const id = document.getElementById('userId').value;
+    const name = document.getElementById('userName').value.trim();
+    const email = document.getElementById('userEmail').value.trim();
+    
+    if (!name) return;
+    
+    const saveBtn = document.getElementById('saveBtn');
+    saveBtn.disabled = true;
+    saveBtn.textContent = 'Guardando...';
+    
+    try {
+        let url, method, body;
+        if (id) {
+            url = `/api/users/${id}`;
+            method = 'PUT';
+            body = JSON.stringify({ name });
+        } else {
+            url = '/api/users';
+            method = 'POST';
+            body = JSON.stringify({ name, email: email || undefined });
+        }
+        
+        const response = await fetch(url, {
+            method,
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': csrfToken
+            },
+            body
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            closeModal();
+            showToast(data.message || 'Usuario guardado correctamente', 'success');
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            showToast(data.message || 'Error al guardar', 'error');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showToast('Error al guardar el usuario', 'error');
+    } finally {
+        saveBtn.disabled = false;
+        saveBtn.textContent = 'Guardar';
+    }
+}
+
+async function toggleActive(id) {
+    try {
+        const response = await fetch(`/api/users/${id}/toggle-active`, {
+            method: 'PATCH',
+            headers: {
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': csrfToken
+            }
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showToast(data.message || 'Estado actualizado', 'success');
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            showToast(data.message || 'Error al cambiar el estado', 'error');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showToast('Error al cambiar el estado del usuario', 'error');
+    }
+}
+
 function startEdit(userId, currentVal) {
     document.getElementById('display-' + userId).style.display = 'none';
     const editRow = document.getElementById('edit-' + userId);
@@ -306,27 +363,42 @@ function startEdit(userId, currentVal) {
     const input = document.getElementById('input-' + userId);
     input.value = currentVal;
     input.focus();
+    
     input.addEventListener('keydown', function handler(e) {
-        if (e.key === 'Enter') saveIdentification(userId);
-        if (e.key === 'Escape') cancelEdit(userId, currentVal);
-    }, { once: true });
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            saveIdentification(userId);
+        }
+        if (e.key === 'Escape') {
+            cancelEdit(userId, currentVal);
+        }
+    });
 }
 
 function cancelEdit(userId, originalVal) {
     document.getElementById('edit-' + userId).style.display = 'none';
     document.getElementById('display-' + userId).style.display = 'flex';
+    document.getElementById('input-' + userId).value = originalVal;
 }
 
 async function saveIdentification(userId) {
     const value = document.getElementById('input-' + userId).value.trim();
-    if (!value) { showToast('La identificación no puede estar vacía.', 'error'); return; }
+    
+    if (!value) {
+        showToast('La identificación no puede estar vacía.', 'error');
+        return;
+    }
 
     try {
         const res = await fetch('/api/users/' + userId + '/identification', {
             method: 'PATCH',
-            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken },
+            headers: { 
+                'Content-Type': 'application/json', 
+                'X-CSRF-TOKEN': csrfToken 
+            },
             body: JSON.stringify({ identification: value }),
         });
+        
         const json = await res.json();
 
         if (!json.success) {
@@ -336,40 +408,41 @@ async function saveIdentification(userId) {
 
         const span = document.getElementById('id-val-' + userId);
         span.textContent = value;
-        span.classList.remove('empty');
-
-        // Update edit button with new value
-        const btn = document.querySelector('#display-' + userId + ' .btn-icon.edit');
-        btn.setAttribute('onclick', `startEdit(${userId}, '${value.replace(/'/g, "\\'")}')`);
+        span.style.color = 'var(--color-slate-700)';
 
         cancelEdit(userId, value);
-        showToast('Identificación actualizada.', 'success');
-    } catch {
+        showToast('Identificación actualizada correctamente.', 'success');
+    } catch (error) {
+        console.error('Error:', error);
         showToast('Error de conexión.', 'error');
     }
 }
 
 async function resetPassword(userId, userName) {
-    if (!confirm(`¿Restablecer la contraseña de "${userName}"?\nLa nueva contraseña será su nombre de usuario.`)) return;
+    if (!confirm(`¿Restablecer la contraseña de "${userName}"?\n\nLa nueva contraseña será su nombre de usuario.`)) {
+        return;
+    }
 
     try {
         const res = await fetch('/api/users/' + userId + '/reset-password', {
             method: 'PATCH',
             headers: { 'X-CSRF-TOKEN': csrfToken },
         });
+        
         const json = await res.json();
-        showToast(json.success ? json.message : 'Error al restablecer.', json.success ? 'success' : 'error');
-    } catch {
+        showToast(
+            json.success ? json.message : 'Error al restablecer contraseña.', 
+            json.success ? 'success' : 'error'
+        );
+    } catch (error) {
+        console.error('Error:', error);
         showToast('Error de conexión.', 'error');
     }
 }
 
-function showToast(msg, type = 'success') {
-    const t = document.getElementById('toast');
-    t.textContent = msg;
-    t.className = 'toast ' + type;
-    t.classList.add('show');
-    setTimeout(() => t.classList.remove('show'), 3000);
-}
+// Cerrar modal con ESC
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeModal();
+});
 </script>
 @endsection
