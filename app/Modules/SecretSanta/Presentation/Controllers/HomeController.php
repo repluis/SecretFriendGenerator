@@ -19,7 +19,33 @@ class HomeController extends Controller
         private GameConfigurationRepositoryInterface $gameConfigRepo,
     ) {}
 
-    public function index(GetChargesByType $getCharges, GetAllUsers $getAllUsers, GetUserBalances $getUserBalances): View
+    /**
+     * Muestra la landing pública con la tabla de pagos (sin navbar).
+     *
+     * @param GetChargesByType $getCharges - Obtiene los cobros por tipo de evento.
+     * @param GetUserBalances $getUserBalances - Obtiene los balances de todos los usuarios.
+     * @return View - Vista pública con tabla de pagos (modules.dashboard.index).
+     */
+    public function index(GetChargesByType $getCharges, GetUserBalances $getUserBalances): View
+    {
+        $fundraisingData = $getCharges->execute(['type' => 'navidad']);
+        $balanceData = $getUserBalances->execute();
+
+        return view('modules.dashboard.index', [
+            'users' => $fundraisingData['users'],
+            'userTransactionBalances' => $balanceData['balances'],
+        ]);
+    }
+
+    /**
+     * Muestra el dashboard administrativo completo (protegido por auth).
+     *
+     * @param GetChargesByType $getCharges - Obtiene los cobros por tipo de evento.
+     * @param GetAllUsers $getAllUsers - Obtiene todos los usuarios del sistema.
+     * @param GetUserBalances $getUserBalances - Obtiene los balances de todos los usuarios.
+     * @return View - Vista del dashboard administrativo (modules.dashboard.home).
+     */
+    public function home(GetChargesByType $getCharges, GetAllUsers $getAllUsers, GetUserBalances $getUserBalances): View
     {
         $totalPlayers = $this->playerRepo->countActive();
         $totalUrls = $this->urlRepo->count();
@@ -30,7 +56,6 @@ class HomeController extends Controller
         $fundraisingData = $getCharges->execute(['type' => 'navidad']);
         $fundraisingUsers = $fundraisingData['summary']['total_users'];
 
-        // Balances from transactions module
         $balanceData = $getUserBalances->execute();
         $userBalances = $balanceData['balances'];
         $fundraisingCollected = $balanceData['total'];
@@ -39,7 +64,7 @@ class HomeController extends Controller
         $users = $getAllUsers->execute();
         $totalUsers = $users->count();
 
-        return view('modules.dashboard.index', compact(
+        return view('modules.dashboard.home', compact(
             'totalPlayers',
             'totalUrls',
             'gameStarted',
@@ -52,6 +77,11 @@ class HomeController extends Controller
         ));
     }
 
+    /**
+     * Muestra la vista del juego de amigo secreto (pública).
+     *
+     * @return View - Vista del juego con URLs, jugadores y estado (modules.secret-santa.index).
+     */
     public function game(): View
     {
         $urls = $this->urlRepo->findAllWithRelations();
@@ -64,6 +94,11 @@ class HomeController extends Controller
         return view('modules.secret-santa.index', compact('urls', 'allPlayers', 'gameStarted'));
     }
 
+    /**
+     * Muestra la vista de configuración del juego (protegido por auth).
+     *
+     * @return View - Vista de configuración con jugadores y URLs (modules.secret-santa.configuracion).
+     */
     public function configuracion(): View
     {
         $players = $this->playerRepo->getActiveModelsOrderedByName();
