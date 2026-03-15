@@ -32,27 +32,21 @@ class FundraisingApiController extends Controller
         // Sync charges with transaction balances before applying penalties
         $syncCharges->execute(['type' => 'navidad']);
 
-        // Calcular dias de multa: desde el dia 16 hasta hoy
-        $daysSince = max(0, $today->day - 15);
-        $totalPenalized = 0;
-
-        for ($i = 0; $i < $daysSince; $i++) {
-            $penaltyDate = $today->copy()->day(16 + $i)->toDateString();
-            $totalPenalized += $applyPenalties->execute([
-                'date' => $penaltyDate,
-                'penalty_amount' => 0.05,
-            ]);
-        }
+        // Apply penalties for today — ApplyDailyPenalties auto-catches up all
+        // missed days since the last time the job ran (or since charge_date).
+        $totalPenalized = $applyPenalties->execute([
+            'date' => $today->toDateString(),
+            'penalty_amount' => 0.05,
+        ]);
 
         return response()->json([
             'success' => true,
             'data' => [
                 'charges_created' => $created,
-                'penalty_days' => $daysSince,
                 'penalties_applied' => $totalPenalized,
                 'charge_date' => $chargeDate,
             ],
-            'message' => "Cobros creados: {$created}, Dias de multa: {$daysSince}",
+            'message' => "Cobros creados: {$created}, Moras actualizadas: {$totalPenalized}",
         ]);
     }
 

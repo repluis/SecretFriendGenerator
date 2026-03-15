@@ -103,7 +103,6 @@
                         @endif
                     </td>
                     <td>
-                        @if(!$charge->isFullyPaid)
                         <div style="display: flex; gap: var(--spacing-xs); align-items: center;">
                             <input
                                 type="number"
@@ -115,7 +114,7 @@
                                 value="{{ number_format($charge->penaltyAmount, 2, '.', '') }}"
                                 {{ Auth::user()->isAdmin() ? '' : 'disabled' }}
                             >
-                            <x-button 
+                            <x-button
                                 variant="{{ Auth::user()->isAdmin() ? 'primary' : 'secondary' }}"
                                 size="sm"
                                 onclick="saveMora({{ $charge->id }}, '{{ $type }}')"
@@ -124,9 +123,6 @@
                                 Guardar
                             </x-button>
                         </div>
-                        @else
-                            <span class="text-muted text-sm">—</span>
-                        @endif
                     </td>
                 </tr>
                 @empty

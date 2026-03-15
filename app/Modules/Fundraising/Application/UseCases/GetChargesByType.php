@@ -21,7 +21,8 @@ class GetChargesByType implements UseCaseInterface
             $user = $userCharges->first()->user;
             $totalOwed = $userCharges->sum(fn($c) => (float) $c->base_amount + (float) $c->penalty_amount);
             $totalPaid = $userCharges->sum(fn($c) => (float) $c->paid_amount);
-            $totalPenalty = $userCharges->sum(fn($c) => (float) $c->penalty_amount);
+            // Only count penalties from unpaid charges (paid penalties are already settled)
+            $totalPenalty = $userCharges->where('is_fully_paid', false)->sum(fn($c) => (float) $c->penalty_amount);
             $unpaidCount = $userCharges->where('is_fully_paid', false)->count();
 
             return [

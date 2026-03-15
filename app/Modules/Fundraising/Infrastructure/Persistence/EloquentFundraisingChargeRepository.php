@@ -49,6 +49,7 @@ class EloquentFundraisingChargeRepository implements FundraisingChargeRepository
                 $q->whereNull('penalty_last_applied_date')
                   ->orWhere('penalty_last_applied_date', '<', $date);
             })
+            ->orderBy('charge_date', 'asc')
             ->get()
             ->map(fn(FundraisingChargeModel $m) => $this->toEntity($m));
     }
