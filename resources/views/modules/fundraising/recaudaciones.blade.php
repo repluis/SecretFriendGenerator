@@ -16,7 +16,7 @@
             {{ Auth::user()->isAdmin() ? '' : 'disabled' }}
             class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors {{ Auth::user()->isAdmin() ? 'bg-indigo-600 text-white hover:bg-indigo-700' : 'bg-gray-300 text-gray-500 cursor-not-allowed' }}">
             <span>▶️</span>
-            <span>Ejecutar cobro manual</span>
+            <span>Actualizar cobros y moras</span>
         </button>
 
         <button
@@ -100,7 +100,8 @@
                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Participante</th>
                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Debe</th>
                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pagado</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mora</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mora pendiente</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mora pagada</th>
                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Saldo</th>
                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acción</th>
@@ -126,6 +127,9 @@
                             <td class="px-4 py-4 text-sm font-semibold text-green-600">${{ number_format($txBalance, 2) }}</td>
                             <td class="px-4 py-4 text-sm font-semibold {{ $user['total_penalty'] > 0 ? 'text-red-600' : 'text-gray-400' }}">
                                 ${{ number_format($user['total_penalty'], 2) }}
+                            </td>
+                            <td class="px-4 py-4 text-sm font-semibold {{ $user['total_penalty_paid'] > 0 ? 'text-green-600' : 'text-gray-400' }}">
+                                ${{ number_format($user['total_penalty_paid'], 2) }}
                             </td>
                             <td class="px-4 py-4 text-sm font-bold {{ $saldo <= 0 ? 'text-green-600' : 'text-amber-600' }}">
                                 ${{ number_format($saldo, 2) }}
@@ -164,7 +168,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="8" class="px-4 py-12 text-center">
+                            <td colspan="9" class="px-4 py-12 text-center">
                                 <div class="text-6xl mb-4">💳</div>
                                 <p class="text-gray-500">No hay cobros registrados para el tipo "{{ $type }}".</p>
                             </td>
@@ -345,7 +349,7 @@ async function createPayment(userId, userName) {
 }
 
 async function runFundraisingManual() {
-    if (!confirm('Esto creará cobros para la fecha de hoy y aplicará multas pendientes. ¿Continuar?')) return;
+    if (!confirm('Se crearán los cobros del mes si no existen, se sincronizarán los pagos y se calcularán las moras del día. ¿Continuar?')) return;
     try {
         const response = await fetch('/api/fundraising/run-manual', { method: 'POST', headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': csrfToken } });
         const data = await response.json();
