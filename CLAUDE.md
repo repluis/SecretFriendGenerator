@@ -78,9 +78,40 @@ Controller → UseCase → RepositoryInterface → EloquentRepository → Databa
 ### Fundraising
 - **Entity**: FundraisingCharge
 - **Repository**: FundraisingChargeRepositoryInterface
-- **Use Cases**: CreateMonthlyCharges, ApplyDailyPenalties, GetChargesByType
+- **Use Cases**: CreateMonthlyCharges, ApplyDailyPenalties, SyncChargesWithTransactions, GetChargesByType, GetUserCharges
 - **Job**: ProcessDailyFundraisingJob (runs daily at 00:00)
-- **Logic**: Every 15th = $1.00 charge per user. Daily $0.05 penalty on unpaid charges.
+- **Controller**: FundraisingApiController — `POST /api/fundraising/run-manual`, `DELETE /api/fundraising/reset-data`
+- **View**: `resources/views/modules/fundraising/recaudaciones.blade.php` (single unified view)
+
+#### Fundraising Business Rules (CRITICAL)
+1. **Monthly charge**: $1.00 per user, generated on the 15th of each month (`charge_date = 15th`).
+2. **Daily penalty**: $0.05/day for each day the base charge is **unpaid** (not covered by transactions).
+3. **Penalty is NOT cumulative across months** — it's always $0.05/day, regardless of how many months unpaid.
+4. **Penalty STOPS accruing once `paid_amount >= base_amount`** (base covered). The accumulated penalty becomes a frozen debt — it no longer grows. Full settlement requires paying base + frozen penalty.
+5. **Payments flow through transactions** (Transaction module). Payments never go directly into `fundraising_charges.paid_amount` — always via `SyncChargesWithTransactions`.
+6. **FIFO payment allocation**: `SyncChargesWithTransactions` applies the user's transaction balance to charges oldest-first.
+
+#### fundraising_charges table schema
+| Column | Type | Description |
+|---|---|---|
+| `user_id` | FK | User |
+| `type` | string | e.g. 'navidad' |
+| `base_amount` | decimal | $1.00 per charge |
+| `penalty_amount` | decimal | Accumulated penalty (frozen once base is paid) |
+| `paid_amount` | decimal | Set by SyncChargesWithTransactions |
+| `charge_date` | date | Always the 15th of the month |
+| `penalty_last_applied_date` | date\|null | Last date penalty was applied (prevents double-applying same day) |
+| `is_fully_paid` | bool | True when paid_amount >= base_amount + penalty_amount |
+
+#### run-manual execution order (FundraisingApiController::runManual)
+1. `CreateMonthlyCharges` — creates charge for today's month if not already exists
+2. `SyncChargesWithTransactions` — recalculates paid_amount + is_fully_paid from transaction balances
+3. `ApplyDailyPenalties` — adds $0.05 × missed_days to charges where `paid_amount < base_amount`
+
+#### Key penalty bug fixed (2026-04)
+**Problem**: After a user paid the base ($1.00) but not the accrued penalty, mora kept growing indefinitely.
+**Root cause**: `ApplyDailyPenalties` only checked `is_fully_paid = false`, not whether the base was covered.
+**Fix**: `findUnpaidOlderThan()` in `EloquentFundraisingChargeRepository` now includes `whereColumn('paid_amount', '<', 'base_amount')`. Penalty only accrues while base is uncovered.
 
 ### Transaction
 - **Entity**: Transaction
