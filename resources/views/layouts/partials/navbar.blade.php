@@ -26,13 +26,6 @@
                     </a>
                 @endif
 
-                @if(Auth::user()->hasPermission('pagos'))
-                    <a href="{{ route('fundraising.pagos') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors {{ ($active ?? '') === 'pagos' ? 'text-indigo-600 bg-indigo-50' : 'text-gray-600 hover:text-indigo-600 hover:bg-indigo-50' }}">
-                        <span class="text-lg">💳</span>
-                        <span>Pagos</span>
-                    </a>
-                @endif
-
                 @if(Auth::user()->hasPermission('recaudaciones'))
                     <a href="{{ route('fundraising.recaudaciones') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors {{ ($active ?? '') === 'recaudaciones' ? 'text-indigo-600 bg-indigo-50' : 'text-gray-600 hover:text-indigo-600 hover:bg-indigo-50' }}">
                         <span class="text-lg">💰</span>
@@ -102,13 +95,6 @@
                 <a href="{{ route('juego') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-base font-medium {{ ($active ?? '') === 'juego' ? 'text-indigo-600 bg-indigo-50 border-l-4 border-indigo-600' : 'text-gray-600 hover:text-indigo-600 hover:bg-indigo-50' }}">
                     <span class="text-xl">🎮</span>
                     <span>Juego</span>
-                </a>
-            @endif
-
-            @if(Auth::user()->hasPermission('pagos'))
-                <a href="{{ route('fundraising.pagos') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-base font-medium {{ ($active ?? '') === 'pagos' ? 'text-indigo-600 bg-indigo-50 border-l-4 border-indigo-600' : 'text-gray-600 hover:text-indigo-600 hover:bg-indigo-50' }}">
-                    <span class="text-xl">💳</span>
-                    <span>Pagos</span>
                 </a>
             @endif
 

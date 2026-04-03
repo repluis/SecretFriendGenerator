@@ -58,7 +58,6 @@ Route::middleware(AuthenticateUser::class)->group(function () {
     // Fundraising (todas protegidas)
     Route::prefix('fundraising')->group(function () {
         Route::get('/recaudaciones', [App\Modules\Fundraising\Presentation\Controllers\FinanceController::class, 'recaudaciones'])->name('fundraising.recaudaciones');
-        Route::get('/pagos', [App\Modules\Fundraising\Presentation\Controllers\FinanceController::class, 'pagos'])->name('fundraising.pagos');
         Route::get('/recaudaciones/{userId}/cargos', [App\Modules\Fundraising\Presentation\Controllers\FinanceController::class, 'cargosUsuario'])->name('fundraising.cargos-usuario');
     });
 });

@@ -43,7 +43,10 @@ class EloquentFundraisingChargeRepository implements FundraisingChargeRepository
 
     public function findUnpaidOlderThan(string $date): Collection
     {
+        // Only apply penalties while the base amount is uncovered.
+        // Once paid_amount >= base_amount, the penalty freezes — no new accrual.
         return FundraisingChargeModel::where('is_fully_paid', false)
+            ->whereColumn('paid_amount', '<', 'base_amount')
             ->where('charge_date', '<', $date)
             ->where(function ($q) use ($date) {
                 $q->whereNull('penalty_last_applied_date')
