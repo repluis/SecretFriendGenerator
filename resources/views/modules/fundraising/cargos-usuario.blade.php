@@ -79,10 +79,30 @@
                     <td class="text-sm">{{ \Carbon\Carbon::parse($charge->chargeDate)->format('d/m/Y') }}</td>
                     <td class="font-semibold">${{ number_format($charge->baseAmount, 2) }}</td>
                     <td>
-                        @if($charge->penaltyAmount > 0)
-                            <span class="font-semibold" style="color: var(--color-danger-600);">
-                                ${{ number_format($charge->penaltyAmount, 2) }}
-                            </span>
+                        @php
+                            $moraCongelada = !$charge->isFullyPaid && $charge->paidAmount >= $charge->baseAmount;
+                        @endphp
+                        @if($charge->isFullyPaid)
+                            <div>
+                                <span class="font-semibold" style="color: var(--color-slate-400);">
+                                    ${{ number_format($charge->penaltyAmount, 2) }}
+                                </span>
+                                <div><x-badge color="green">✅ Pagada</x-badge></div>
+                            </div>
+                        @elseif($moraCongelada)
+                            <div>
+                                <span class="font-semibold" style="color: var(--color-danger-600);">
+                                    ${{ number_format($charge->penaltyAmount, 2) }}
+                                </span>
+                                <div><x-badge color="blue">🔒 Congelada</x-badge></div>
+                            </div>
+                        @elseif($charge->penaltyAmount > 0)
+                            <div>
+                                <span class="font-semibold" style="color: var(--color-danger-600);">
+                                    ${{ number_format($charge->penaltyAmount, 2) }}
+                                </span>
+                                <div><x-badge color="red">📈 Activa</x-badge></div>
+                            </div>
                         @else
                             <span class="text-muted">$0.00</span>
                         @endif
