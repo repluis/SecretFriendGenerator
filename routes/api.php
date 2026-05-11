@@ -53,6 +53,7 @@ Route::prefix('game-config')->group(function () {
 // Rutas de recaudaciones (requieren autenticación y rol admin)
 Route::prefix('fundraising')->middleware(['admin'])->group(function () {
     Route::post('/run-manual', [FundraisingApiController::class, 'runManual']);
+    Route::delete('/reset-current-month', [FundraisingApiController::class, 'resetCurrentMonthCharges']);
     Route::delete('/reset-data', [FundraisingApiController::class, 'resetData']);
     Route::patch('/charges/{chargeId}/penalty', [FundraisingApiController::class, 'updatePenalty']);
 });

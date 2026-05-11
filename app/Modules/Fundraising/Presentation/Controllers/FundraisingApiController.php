@@ -22,12 +22,15 @@ class FundraisingApiController extends Controller
         $today = Carbon::today();
         $chargeDate = $today->copy()->day(15)->toDateString(); // 15 del mes actual
 
-        // Crear cobros con fecha del 15
-        $created = $createCharges->execute([
-            'type' => 'navidad',
-            'base_amount' => 1.00,
-            'charge_date' => $chargeDate,
-        ]);
+        // Solo crear cobros si ya llegamos al día 15 del mes
+        $created = 0;
+        if ($today->day >= 15) {
+            $created = $createCharges->execute([
+                'type' => 'navidad',
+                'base_amount' => 1.00,
+                'charge_date' => $chargeDate,
+            ]);
+        }
 
         // Sync charges with transaction balances before applying penalties
         $syncCharges->execute(['type' => 'navidad']);
@@ -67,6 +70,20 @@ class FundraisingApiController extends Controller
             'success' => true,
             'data'    => $charge?->toArray(),
             'message' => 'Mora actualizada correctamente',
+        ]);
+    }
+
+    public function resetCurrentMonthCharges(): JsonResponse
+    {
+        $chargeDate = Carbon::today()->day(15)->toDateString();
+        $deleted = DB::table('fundraising_charges')
+            ->where('charge_date', $chargeDate)
+            ->where('type', 'navidad')
+            ->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => "Cobros de {$chargeDate} eliminados: {$deleted} registro(s).",
         ]);
     }
 

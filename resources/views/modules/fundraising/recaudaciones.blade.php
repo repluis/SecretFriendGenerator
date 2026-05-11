@@ -28,6 +28,14 @@
         </button>
 
         <button
+            onclick="openResetMonthModal()"
+            {{ Auth::user()->isAdmin() ? '' : 'disabled' }}
+            class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors {{ Auth::user()->isAdmin() ? 'bg-amber-500 text-white hover:bg-amber-600' : 'bg-gray-300 text-gray-500 cursor-not-allowed' }}">
+            <span>🗑️</span>
+            <span>Borrar cobros del mes actual</span>
+        </button>
+
+        <button
             onclick="openResetModal()"
             {{ Auth::user()->isAdmin() ? '' : 'disabled' }}
             class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors {{ Auth::user()->isAdmin() ? 'bg-red-600 text-white hover:bg-red-700' : 'bg-gray-300 text-gray-500 cursor-not-allowed' }}">
@@ -245,6 +253,34 @@
         </div>
     </div>
 
+    <!-- Modal Borrar Cobros del Mes Actual -->
+    <div id="modal-reset-month" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl max-w-md w-full shadow-xl">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-900">🗑️ Borrar cobros del mes actual</h3>
+            </div>
+            <div class="px-6 py-4">
+                <p class="text-amber-700 mb-2">
+                    Se eliminarán los cobros generados para el <strong>15 del mes actual</strong>.
+                    Las transacciones y usuarios <strong>no se verán afectados</strong>.
+                </p>
+                <p class="text-sm text-gray-500">¿Estás seguro de continuar?</p>
+            </div>
+            <div class="px-6 py-4 bg-gray-50 rounded-b-xl flex justify-end gap-3">
+                <button
+                    onclick="closeResetMonthModal()"
+                    class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                    Cancelar
+                </button>
+                <button
+                    onclick="confirmResetMonth()"
+                    class="px-4 py-2 text-sm font-medium text-white bg-amber-500 rounded-lg hover:bg-amber-600 transition-colors">
+                    Sí, borrar cobros
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Modal de Confirmación -->
     <div id="modal-reset-data" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-xl max-w-md w-full shadow-xl">
@@ -317,6 +353,18 @@ function copyResumen() {
         btn.classList.replace('bg-green-600', 'bg-green-700');
         setTimeout(() => { btn.innerHTML = originalHTML; btn.classList.replace('bg-green-700', 'bg-green-600'); }, 2000);
     }).catch(() => showToast('No se pudo copiar al portapapeles', 'error'));
+}
+
+function openResetMonthModal() { document.getElementById('modal-reset-month').classList.remove('hidden'); }
+function closeResetMonthModal() { document.getElementById('modal-reset-month').classList.add('hidden'); }
+
+async function confirmResetMonth() {
+    try {
+        const response = await fetch('/api/fundraising/reset-current-month', { method: 'DELETE', headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': csrfToken } });
+        const data = await response.json();
+        if (data.success) { closeResetMonthModal(); showToast(data.message, 'success'); setTimeout(() => location.reload(), 1500); }
+        else { showToast(data.message || 'Error al eliminar los cobros', 'error'); }
+    } catch (error) { console.error('Error:', error); showToast('Error de conexión', 'error'); }
 }
 
 function openResetModal() { document.getElementById('modal-reset-data').classList.remove('hidden'); }
